@@ -1,4 +1,5 @@
 import type { NextConfig } from "next"
+import withPWA from "@ducanh2912/next-pwa"
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -10,12 +11,13 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // unsafe-* required by Next.js
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // unsafe-* required by Next.js + SW
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https://lh3.googleusercontent.com https://utfs.io",
       "connect-src 'self'",
       "frame-ancestors 'none'",
+      "worker-src 'self'",
     ].join("; "),
   },
 ]
@@ -40,4 +42,13 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+export default withPWA({
+  dest: "public",
+  cacheOnFrontEndNav: true,
+  aggressiveFrontEndNavCaching: true,
+  reloadOnOnline: true,
+  disable: process.env.NODE_ENV === "development",
+  workboxOptions: {
+    disableDevLogs: true,
+  },
+})(nextConfig)
