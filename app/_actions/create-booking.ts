@@ -8,6 +8,7 @@ import { getAvailableSlots } from "@/lib/availability"
 import { returnValidationErrors } from "next-safe-action"
 import { headers } from "next/headers"
 import { revalidatePath } from "next/cache"
+import { toZonedTime } from "date-fns-tz"
 import { z } from "zod"
 
 const inputSchema = z.object({
@@ -39,7 +40,8 @@ export const createBooking = actionClient
       durationInMinutes: service.durationInMinutes,
     })
 
-    const requestedSlot = `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`
+    const zonedDate = toZonedTime(date, "America/Sao_Paulo")
+    const requestedSlot = `${String(zonedDate.getHours()).padStart(2, "0")}:${String(zonedDate.getMinutes()).padStart(2, "0")}`
     if (!available.includes(requestedSlot)) {
       return returnValidationErrors(inputSchema, { _errors: [UNAVAILABLE_MSG] })
     }

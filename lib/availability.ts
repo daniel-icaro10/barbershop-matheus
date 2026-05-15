@@ -1,4 +1,5 @@
-import { endOfDay, startOfDay } from "date-fns"
+import { startOfDay, endOfDay } from "date-fns"
+import { toZonedTime, fromZonedTime } from "date-fns-tz"
 import { prisma } from "@/lib/prisma"
 
 export interface Interval {
@@ -11,6 +12,7 @@ export function intervalsOverlap(a: Interval, b: Interval): boolean {
   return a.start < b.end && a.end > b.start
 }
 
+const TIMEZONE = "America/Sao_Paulo"
 const DEFAULT_OPEN = "09:00"
 const DEFAULT_CLOSE = "19:00"
 
@@ -18,14 +20,15 @@ export interface GetAvailableSlotsParams {
   date: Date
   barbershopId: string
   durationInMinutes: number
-  barberId?: string // reserved: future multi-barber support
+  barberId?: string
 }
 
+// Converts a "HH:mm" slot string to a UTC Date, interpreting the time in Brazil timezone
 function slotToDate(date: Date, slot: string): Date {
   const [h, m] = slot.split(":").map(Number)
-  const d = new Date(date)
-  d.setHours(h, m, 0, 0)
-  return d
+  const zoned = toZonedTime(date, TIMEZONE)
+  zoned.setHours(h, m, 0, 0)
+  return fromZonedTime(zoned, TIMEZONE)
 }
 
 // Generate 30-min interval start times between openTime and closeTime
@@ -45,7 +48,11 @@ function generateSlots(openTime: string, closeTime: string): string[] {
 export async function getAvailableSlots(params: GetAvailableSlotsParams): Promise<string[]> {
   const { date, barbershopId, durationInMinutes } = params
 
-  const dayOfWeek = date.getDay()
+  // Use Brazil timezone for day-of-week and day boundaries
+  const zonedDate = toZonedTime(date, TIMEZONE)
+  const dayOfWeek = zonedDate.getDay()
+  const dayStart = fromZonedTime(startOfDay(zonedDate), TIMEZONE)
+  const dayEnd = fromZonedTime(endOfDay(zonedDate), TIMEZONE)
 
   const [workingHours, blockedTimes, bookings] = await Promise.all([
     prisma.workingHours.findUnique({
@@ -54,8 +61,8 @@ export async function getAvailableSlots(params: GetAvailableSlotsParams): Promis
     prisma.blockedTime.findMany({
       where: {
         barbershopId,
-        startDate: { lte: endOfDay(date) },
-        endDate: { gte: startOfDay(date) },
+        startDate: { lte: dayEnd },
+        endDate: { gte: dayStart },
       },
       select: { startDate: true, endDate: true },
     }),
@@ -63,8 +70,7 @@ export async function getAvailableSlots(params: GetAvailableSlotsParams): Promis
       where: {
         barbershopId,
         cancelled: false,
-        date: { gte: startOfDay(date), lte: endOfDay(date) },
-        // Future: ...(params.barberId ? { barberId: params.barberId } : {}),
+        date: { gte: dayStart, lte: dayEnd },
       },
       select: { date: true, endDate: true },
     }),
@@ -78,14 +84,13 @@ export async function getAvailableSlots(params: GetAvailableSlotsParams): Promis
   const allSlots = generateSlots(openTime, closeTime)
 
   const closeDate = slotToDate(date, closeTime)
-
   const now = new Date()
 
   return allSlots.filter((slot) => {
     const slotStart = slotToDate(date, slot)
     const slotEnd = new Date(slotStart.getTime() + durationInMinutes * 60_000)
 
-    // Skip past slots (only relevant for today)
+    // Skip past slots
     if (slotStart <= now) return false
 
     // Service must finish before or at closing time
