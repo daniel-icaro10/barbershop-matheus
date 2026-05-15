@@ -11,8 +11,8 @@
   --card-foreground: oklch(0.2178 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.2178 0 0);
-  --primary: oklch(0.433 0.0745 149.7347);
-  --primary-foreground: oklch(1 0 0);
+  --primary: oklch(0.58 0.14 78);
+  --primary-foreground: oklch(0.08 0 0);
   --secondary: oklch(0.9067 0 0);
   --secondary-foreground: oklch(0.2178 0 0);
   --muted: oklch(0.9551 0 0);
@@ -65,38 +65,38 @@
 }
 
 .dark {
-  --background: oklch(0.2178 0 0);
-  --foreground: oklch(0.994 0 0);
-  --card: oklch(0.2686 0 0);
-  --card-foreground: oklch(0.994 0 0);
-  --popover: oklch(0.2686 0 0);
-  --popover-foreground: oklch(0.994 0 0);
-  --primary: oklch(0.433 0.0745 149.7347);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.3211 0 0);
-  --secondary-foreground: oklch(0.994 0 0);
-  --muted: oklch(0.2891 0 0);
-  --muted-foreground: oklch(0.7155 0 0);
-  --accent: oklch(0.3338 0.0309 150.119);
-  --accent-foreground: oklch(0.994 0 0);
+  --background: oklch(0.062 0 0);
+  --foreground: oklch(0.97 0 0);
+  --card: oklch(0.095 0 0);
+  --card-foreground: oklch(0.97 0 0);
+  --popover: oklch(0.10 0 0);
+  --popover-foreground: oklch(0.97 0 0);
+  --primary: oklch(0.78 0.16 78);
+  --primary-foreground: oklch(0.08 0 0);
+  --secondary: oklch(0.13 0 0);
+  --secondary-foreground: oklch(0.97 0 0);
+  --muted: oklch(0.13 0 0);
+  --muted-foreground: oklch(0.56 0 0);
+  --accent: oklch(0.18 0.025 78);
+  --accent-foreground: oklch(0.97 0 0);
   --destructive: oklch(0.6591 0.153 22.1703);
   --destructive-foreground: oklch(0.2178 0 0);
-  --border: oklch(0.3979 0 0);
-  --input: oklch(0.2686 0 0);
-  --ring: oklch(0.433 0.0745 149.7347);
-  --chart-1: oklch(0.433 0.0745 149.7347);
+  --border: oklch(0.15 0 0);
+  --input: oklch(0.095 0 0);
+  --ring: oklch(0.78 0.16 78);
+  --chart-1: oklch(0.78 0.16 78);
   --chart-2: oklch(0.6402 0.069 155.0903);
   --chart-3: oklch(0.7641 0.0506 150.5513);
   --chart-4: oklch(0.8883 0.0287 151.8825);
   --chart-5: oklch(0.9712 0.0075 151.8901);
-  --sidebar: oklch(0.2478 0 0);
-  --sidebar-foreground: oklch(0.994 0 0);
-  --sidebar-primary: oklch(0.433 0.0745 149.7347);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.3338 0.0309 150.119);
-  --sidebar-accent-foreground: oklch(0.994 0 0);
-  --sidebar-border: oklch(0.3485 0 0);
-  --sidebar-ring: oklch(0.433 0.0745 149.7347);
+  --sidebar: oklch(0.078 0 0);
+  --sidebar-foreground: oklch(0.97 0 0);
+  --sidebar-primary: oklch(0.78 0.16 78);
+  --sidebar-primary-foreground: oklch(0.08 0 0);
+  --sidebar-accent: oklch(0.13 0 0);
+  --sidebar-accent-foreground: oklch(0.97 0 0);
+  --sidebar-border: oklch(0.14 0 0);
+  --sidebar-ring: oklch(0.78 0.16 78);
   --font-sans: Inter, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: JetBrains Mono, monospace;
@@ -182,11 +182,116 @@
   --tracking-widest: calc(var(--tracking-normal) + 0.1em);
 }
 
+/* ── Landing page premium fonts ── */
+@layer utilities {
+  .font-bebas {
+    font-family: var(--font-bebas), sans-serif;
+  }
+  .font-playfair {
+    font-family: var(--font-playfair), serif;
+  }
+
+  /* Cinematic film grain — SVG feTurbulence tiled */
+  .cinema-grain {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+    background-repeat: repeat;
+  }
+  /* Fine-grain variant for top layer */
+  .cinema-grain-fine {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23g)'/%3E%3C/svg%3E");
+    background-size: 120px 120px;
+    background-repeat: repeat;
+  }
+}
+
+/* ── Cinematic marquee ── */
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee-scroll 28s linear infinite;
+  will-change: transform;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* ── Slow float (hero atmospheric) ── */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+.animate-float {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    scrollbar-width: thin;
+    scrollbar-color: oklch(0.28 0 0) transparent;
   }
   body {
     @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+  ::selection {
+    background-color: oklch(0.78 0.16 78 / 0.28);
+    color: oklch(0.97 0 0);
+  }
+  *:focus-visible {
+    outline-color: oklch(0.78 0.16 78);
+  }
+}
+
+/* ── Shimmer skeleton ── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    oklch(0.22 0 0)  0%,
+    oklch(0.30 0 0) 50%,
+    oklch(0.22 0 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+/* ── Safe areas (iPhone notch / home bar) ── */
+.safe-top    { padding-top:    env(safe-area-inset-top, 0px); }
+.safe-bottom { padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px)); }
+
+/* ── Premium spinner (used in step-auth) ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── react-day-picker dark premium overrides ── */
+.rdp-root {
+  --rdp-accent-color: oklch(0.78 0.16 78);
+  --rdp-accent-background-color: oklch(0.78 0.16 78 / 0.12);
+  --rdp-day-height: 2.25rem;
+  --rdp-day-width:  2.25rem;
+}
+
+.rdp-day_button:hover:not([disabled]) {
+  background-color: oklch(0.78 0.16 78 / 0.1) !important;
+  color: oklch(0.97 0 0) !important;
+}
+
+.rdp-selected .rdp-day_button {
+  background-color: oklch(0.78 0.16 78) !important;
+  color: oklch(0.08 0 0) !important;
+  box-shadow: 0 0 12px oklch(0.78 0.16 78 / 0.45) !important;
+  font-weight: 700 !important;
+}
+
+.rdp-today:not(.rdp-selected) .rdp-day_button {
+  border: 1px solid oklch(0.78 0.16 78 / 0.5) !important;
+  color: oklch(0.78 0.16 78) !important;
 }

@@ -37,7 +37,7 @@ interface BookingItemProps {
   booking: {
     id: string;
     date: Date;
-    cancelled: boolean | null;
+    cancelled: boolean;
     service: {
       name: string;
       priceInCents: number;

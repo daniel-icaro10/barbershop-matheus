@@ -15,25 +15,29 @@ datasource db {
 }
 
 model Barbershop {
-  id          String              @id @default(uuid())
-  name        String
-  address     String
-  description String
-  imageUrl    String
-  phones      String[]
-  services    BarbershopService[]
-  bookings    Booking[]
+  id           String              @id @default(uuid())
+  name         String
+  address      String
+  description  String
+  imageUrl     String
+  phones       String[]
+  services     BarbershopService[]
+  bookings     Booking[]
+  workingHours WorkingHours[]
+  blockedTimes BlockedTime[]
 }
 
 model BarbershopService {
-  id           String     @id @default(uuid())
-  name         String
-  description  String
-  imageUrl     String
-  barbershopId String
-  barbershop   Barbershop @relation(fields: [barbershopId], references: [id])
-  priceInCents Int
-  bookings     Booking[]
+  id                String     @id @default(uuid())
+  name              String
+  description       String
+  imageUrl          String
+  barbershopId      String
+  barbershop        Barbershop @relation(fields: [barbershopId], references: [id])
+  priceInCents      Int
+  durationInMinutes Int        @default(30)
+  isActive          Boolean    @default(true)
+  bookings          Booking[]
 }
 
 model Booking {
@@ -45,9 +49,12 @@ model Booking {
   userId         String
   user           User              @relation(fields: [userId], references: [id])
   date           DateTime          @db.Timestamptz
-  cancelled      Boolean?          @default(false)
+  endDate        DateTime?         @db.Timestamptz
+  cancelled      Boolean           @default(false)
   cancelledAt    DateTime?         @db.Timestamptz
-  stripeChargeId String?
+
+  @@index([barbershopId, date])
+  @@index([userId])
 }
 
 model User {
@@ -56,6 +63,7 @@ model User {
   email         String
   emailVerified Boolean   @default(false)
   image         String?
+  role          String    @default("USER")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @default(now()) @updatedAt
   sessions      Session[]
@@ -64,6 +72,30 @@ model User {
 
   @@unique([email])
   @@map("user")
+}
+
+model WorkingHours {
+  id           String     @id @default(uuid())
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id])
+  dayOfWeek    Int        // 0=Sunday … 6=Saturday
+  openTime     String     // "09:00"
+  closeTime    String     // "19:00"
+  isOpen       Boolean    @default(true)
+
+  @@unique([barbershopId, dayOfWeek])
+}
+
+model BlockedTime {
+  id           String     @id @default(uuid())
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id])
+  startDate    DateTime   @db.Timestamptz
+  endDate      DateTime   @db.Timestamptz
+  reason       String?
+  createdAt    DateTime   @default(now())
+
+  @@index([barbershopId, startDate, endDate])
 }
 
 model Session {

@@ -1,0 +1,53 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { Menu } from "lucide-react"
+import Image from "next/image"
+import { AdminSidebar } from "./admin-sidebar"
+
+interface AdminShellProps {
+  user: { name: string; email: string; image: string | null }
+  children: React.ReactNode
+}
+
+export function AdminShell({ user, children }: AdminShellProps) {
+  const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
+  return (
+    <div className="flex min-h-screen bg-[#080808]">
+      {/* Mobile backdrop — só renderiza no cliente para evitar hydration mismatch */}
+      {mounted && open && (
+        <div
+          className="fixed inset-0 z-30 bg-black/70 backdrop-blur-sm lg:hidden"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      <AdminSidebar user={user} open={open} onClose={() => setOpen(false)} />
+
+      <main className="flex-1 overflow-auto lg:ml-60">
+        {/* Mobile top bar */}
+        <div className="flex h-14 items-center gap-3 border-b border-white/[0.06] bg-[#060504]/90 px-4 backdrop-blur-sm lg:hidden">
+          <button
+            onClick={() => setOpen(true)}
+            className="p-2 text-white/40 transition-colors hover:text-white"
+            aria-label="Abrir menu"
+          >
+            <Menu className="size-5" />
+          </button>
+          <div className="flex items-center gap-2.5">
+            <Image src="/logo.png" alt="Matheus Barbeiro" width={26} height={18} className="opacity-80" />
+            <p className="font-bebas text-[1rem] text-white tracking-wide">
+              Matheus <span className="text-[#c9a227]">Barbeiro</span>
+              <span className="ml-2 text-[9px] font-bold uppercase tracking-[0.35em] text-white/25">Admin</span>
+            </p>
+          </div>
+        </div>
+
+        {children}
+      </main>
+    </div>
+  )
+}

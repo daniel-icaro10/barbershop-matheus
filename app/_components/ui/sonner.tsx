@@ -29,9 +29,20 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--normal-bg": "var(--popover)",
           "--normal-text": "var(--popover-foreground)",
           "--normal-border": "var(--border)",
-          "--border-radius": "var(--radius)",
+          "--border-radius": "1rem",
+          "--toast-border-radius": "1rem",
         } as React.CSSProperties
       }
+      toastOptions={{
+        classNames: {
+          toast:
+            "!rounded-2xl !border-border/60 shadow-xl !shadow-black/20 font-sans",
+          title: "!font-semibold",
+          description: "!text-muted-foreground",
+          closeButton:
+            "!rounded-xl !border-border/60 !bg-card hover:!bg-muted",
+        },
+      }}
       {...props}
     />
   )
