@@ -17,10 +17,9 @@ export const cancelBooking = actionClient
   .action(async ({ parsedInput: { bookingId } }) => {
     const session = await auth.api.getSession({ headers: await headers() })
     if (!session?.user) {
-      returnValidationErrors(inputSchema, { _errors: ["Unauthorized"] })
+      return returnValidationErrors(inputSchema, { _errors: ["Não autorizado"] })
     }
 
-    // Atomic update: só cancela se não estiver cancelado ainda e for do usuário correto
     const updated = await prisma.booking.updateMany({
       where: {
         id: bookingId,
@@ -35,23 +34,20 @@ export const cancelBooking = actionClient
     })
 
     if (updated.count === 0) {
-      // Busca para dar mensagem específica
       const booking = await prisma.booking.findUnique({
         where: { id: bookingId },
         select: { userId: true, cancelled: true, date: true },
       })
       if (!booking) {
-        returnValidationErrors(inputSchema, { _errors: ["Reserva não encontrada"] })
+        return returnValidationErrors(inputSchema, { _errors: ["Reserva não encontrada"] })
       }
       if (booking.userId !== session.user.id) {
-        returnValidationErrors(inputSchema, { _errors: ["Sem permissão para cancelar esta reserva"] })
+        return returnValidationErrors(inputSchema, { _errors: ["Sem permissão para cancelar esta reserva"] })
       }
       if (booking.cancelled) {
-        returnValidationErrors(inputSchema, { _errors: ["Esta reserva já foi cancelada"] })
+        return returnValidationErrors(inputSchema, { _errors: ["Esta reserva já foi cancelada"] })
       }
-      if (booking.date <= new Date()) {
-        returnValidationErrors(inputSchema, { _errors: ["Não é possível cancelar reservas passadas"] })
-      }
+      return returnValidationErrors(inputSchema, { _errors: ["Não é possível cancelar reservas passadas"] })
     }
 
     revalidatePath("/minha-conta")
