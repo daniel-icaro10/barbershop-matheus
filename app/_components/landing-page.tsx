@@ -15,6 +15,8 @@ import {
   Zap,
   Play,
   User,
+  LayoutDashboard,
+  LogOut,
 } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 
@@ -294,20 +296,23 @@ function CinematicBackground() {
 
 function NavUserButton({ isAdmin = false }: { isAdmin?: boolean }) {
   const { data: session } = authClient.useSession()
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   if (session?.user) {
     return (
-      <div className="flex items-center gap-2">
-        {isAdmin && (
-          <Link
-            href="/admin"
-            className="flex items-center gap-1.5 border border-[#c9a227]/40 bg-[#c9a227]/8 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#c9a227] backdrop-blur-sm transition-all duration-300 hover:bg-[#c9a227] hover:text-black"
-          >
-            Admin
-          </Link>
-        )}
-        <Link
-          href="/minha-conta"
+      <div ref={ref} className="relative">
+        {/* Trigger */}
+        <button
+          onClick={() => setOpen((v) => !v)}
           className="flex items-center gap-2 border border-white/10 bg-white/5 px-3 py-2 backdrop-blur-sm transition-all duration-300 hover:border-[#c9a227]/40 hover:bg-[#c9a227]/8"
         >
           {session.user.image ? (
@@ -326,7 +331,71 @@ function NavUserButton({ isAdmin = false }: { isAdmin?: boolean }) {
           <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">
             {session.user.name?.split(" ")[0]}
           </span>
-        </Link>
+          <ChevronDown className={`size-3 text-white/30 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+        </button>
+
+        {/* Dropdown */}
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              initial={{ opacity: 0, y: -6, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -6, scale: 0.97 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              className="absolute right-0 top-full mt-2 w-52 border border-white/10 bg-[#111]/95 backdrop-blur-xl shadow-2xl shadow-black/60 overflow-hidden"
+            >
+              {/* User info */}
+              <div className="border-b border-white/[0.06] px-4 py-3">
+                <p className="text-xs font-semibold text-white/80 truncate">{session.user.name}</p>
+                <p className="text-[10px] text-white/35 truncate mt-0.5">{session.user.email}</p>
+              </div>
+
+              {/* Admin — destaque */}
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 border-b border-[#c9a227]/15 bg-[#c9a227]/[0.06] px-4 py-3 transition-colors hover:bg-[#c9a227]/12 group"
+                >
+                  <div className="flex size-6 items-center justify-center bg-[#c9a227]/15">
+                    <LayoutDashboard className="size-3.5 text-[#c9a227]" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#c9a227]">Painel Admin</p>
+                    <p className="text-[9px] text-[#c9a227]/50 mt-0.5">Gerenciar barbearia</p>
+                  </div>
+                </Link>
+              )}
+
+              {/* Minha Conta */}
+              <Link
+                href="/minha-conta"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-white/[0.04] border-b border-white/[0.04]"
+              >
+                <div className="flex size-6 items-center justify-center bg-white/[0.06]">
+                  <User className="size-3.5 text-white/50" />
+                </div>
+                <p className="text-[11px] font-semibold text-white/60">Minha Conta</p>
+              </Link>
+
+              {/* Sair */}
+              <button
+                onClick={async () => {
+                  setOpen(false)
+                  await authClient.signOut()
+                  window.location.href = "/"
+                }}
+                className="flex w-full items-center gap-3 px-4 py-3 transition-colors hover:bg-red-500/[0.06]"
+              >
+                <div className="flex size-6 items-center justify-center bg-red-500/10">
+                  <LogOut className="size-3.5 text-red-400/70" />
+                </div>
+                <p className="text-[11px] font-semibold text-red-400/60">Sair</p>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     )
   }
