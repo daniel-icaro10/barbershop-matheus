@@ -8,8 +8,9 @@ import { getAvailableSlots } from "@/lib/availability"
 import { returnValidationErrors } from "next-safe-action"
 import { headers } from "next/headers"
 import { revalidatePath } from "next/cache"
-import { toZonedTime } from "date-fns-tz"
+import { toZonedTime, formatInTimeZone } from "date-fns-tz"
 import { rateLimit } from "@/lib/rate-limit"
+import { sendPushToUser } from "@/lib/push"
 import { z } from "zod"
 
 const inputSchema = z.object({
@@ -84,6 +85,15 @@ export const createBooking = actionClient
 
       revalidatePath("/admin")
       revalidatePath("/admin/agenda")
+
+      // Fire-and-forget push notification (non-blocking)
+      const dateStr = formatInTimeZone(booking.date, "America/Sao_Paulo", "dd/MM/yyyy 'às' HH:mm")
+      sendPushToUser(session.user.id, {
+        title: "Agendamento confirmado ✂️",
+        body: `${service.name} — ${dateStr}`,
+        url: "/minha-conta",
+      }).catch(() => {})
+
       return booking
     } catch (e) {
       if (e instanceof Error && e.message === "SLOT_TAKEN") {

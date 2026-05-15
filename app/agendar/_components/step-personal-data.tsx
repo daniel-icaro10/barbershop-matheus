@@ -4,9 +4,12 @@ import { useBookingStore } from "@/lib/store/booking-store"
 import { motion } from "framer-motion"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Scissors, Calendar, Clock, DollarSign } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { authClient } from "@/lib/auth-client"
+
+const STORAGE_KEY = "barbershop-personal-data"
 
 const formatPrice = (cents: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100)
@@ -57,15 +60,31 @@ function PremiumInput({
 
 export default function StepPersonalData() {
   const { personalData, service, date, time, setPersonalData, next } = useBookingStore()
+  const { data: session } = authClient.useSession()
 
   const [name, setName] = useState(personalData?.name ?? "")
   const [phone, setPhone] = useState(personalData?.phone ?? "")
   const [notes, setNotes] = useState(personalData?.notes ?? "")
 
+  // Pre-fill from session (name) and localStorage (phone) on first render
+  useEffect(() => {
+    if (personalData) return // already filled from a previous step visit
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}")
+      if (session?.user.name && !name) setName(session.user.name)
+      if (saved.phone && !phone) setPhone(saved.phone)
+    } catch {
+      if (session?.user.name && !name) setName(session.user.name)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session])
+
   const isValid = name.trim().length >= 2 && phone.trim().length >= 8
 
   const handleContinue = () => {
-    setPersonalData({ name: name.trim(), phone: phone.trim(), notes: notes.trim() })
+    const data = { name: name.trim(), phone: phone.trim(), notes: notes.trim() }
+    setPersonalData(data)
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ phone: data.phone })) } catch { /* ignore */ }
     next()
   }
 

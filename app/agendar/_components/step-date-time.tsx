@@ -99,7 +99,7 @@ export default function StepDateTime() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {Array.from({ length: 5 }).map((_, i) => (
-                        <div key={i} className="skeleton-shimmer h-9 w-16" />
+                        <div key={i} className="skeleton-shimmer min-h-[44px] w-16" />
                       ))}
                     </div>
                   </div>
@@ -159,7 +159,7 @@ function SlotGroup({
               transition={{ delay: i * 0.025, duration: 0.22 }}
               onClick={() => onSelect(slot)}
               className={cn(
-                "h-9 px-4 text-sm font-medium transition-all duration-200",
+                "min-h-[44px] px-4 text-sm font-medium transition-all duration-200",
                 isSelected
                   ? "bg-[#c9a227] text-black shadow-[0_0_16px_rgba(201,162,39,0.4)] scale-[1.04]"
                   : "border border-white/[0.08] bg-white/[0.03] text-white/70 hover:border-[#c9a227]/30 hover:text-white hover:scale-[1.02] active:scale-[0.97]"

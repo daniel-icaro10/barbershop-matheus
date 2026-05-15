@@ -15,6 +15,7 @@ const TZ = "America/Sao_Paulo"
 import { cn } from "@/lib/utils"
 import { CancelButton } from "./_components/cancel-button"
 import { LogoutButton } from "./_components/logout-button"
+import { PushButton } from "./_components/push-button"
 
 const fmt = (cents: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100)
@@ -84,6 +85,11 @@ export default async function MinhaContaPage() {
             </h1>
             <p className="mt-0.5 text-xs text-white/30">{session.user.email}</p>
           </div>
+        </div>
+
+        {/* ── Notificações (só aparece no PWA instalado) ── */}
+        <div className="mb-8">
+          <PushButton />
         </div>
 
         {/* ── Próximo agendamento ── */}
