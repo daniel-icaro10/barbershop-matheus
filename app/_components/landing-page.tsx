@@ -292,32 +292,42 @@ function CinematicBackground() {
 
 /* ── Nav user button ─────────────────────────────────────────────────────── */
 
-function NavUserButton() {
+function NavUserButton({ isAdmin = false }: { isAdmin?: boolean }) {
   const { data: session } = authClient.useSession()
 
   if (session?.user) {
     return (
-      <Link
-        href="/minha-conta"
-        className="flex items-center gap-2 border border-white/10 bg-white/5 px-3 py-2 backdrop-blur-sm transition-all duration-300 hover:border-[#c9a227]/40 hover:bg-[#c9a227]/8"
-      >
-        {session.user.image ? (
-          <Image
-            src={session.user.image}
-            alt={session.user.name ?? ""}
-            width={20}
-            height={20}
-            className="rounded-full object-cover"
-          />
-        ) : (
-          <div className="flex size-5 items-center justify-center rounded-full bg-[#c9a227]/20">
-            <User className="size-3 text-[#c9a227]" />
-          </div>
+      <div className="flex items-center gap-2">
+        {isAdmin && (
+          <Link
+            href="/admin"
+            className="flex items-center gap-1.5 border border-[#c9a227]/40 bg-[#c9a227]/8 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#c9a227] backdrop-blur-sm transition-all duration-300 hover:bg-[#c9a227] hover:text-black"
+          >
+            Admin
+          </Link>
         )}
-        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">
-          {session.user.name?.split(" ")[0]}
-        </span>
-      </Link>
+        <Link
+          href="/minha-conta"
+          className="flex items-center gap-2 border border-white/10 bg-white/5 px-3 py-2 backdrop-blur-sm transition-all duration-300 hover:border-[#c9a227]/40 hover:bg-[#c9a227]/8"
+        >
+          {session.user.image ? (
+            <Image
+              src={session.user.image}
+              alt={session.user.name ?? ""}
+              width={20}
+              height={20}
+              className="rounded-full object-cover"
+            />
+          ) : (
+            <div className="flex size-5 items-center justify-center rounded-full bg-[#c9a227]/20">
+              <User className="size-3 text-[#c9a227]" />
+            </div>
+          )}
+          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">
+            {session.user.name?.split(" ")[0]}
+          </span>
+        </Link>
+      </div>
     )
   }
 
@@ -381,9 +391,11 @@ function ReelCard({ src }: { src: string }) {
 export function LandingPage({
   barbershop,
   services,
+  isAdmin = false,
 }: {
   barbershop: BarbershopData
   services: ServiceData[]
+  isAdmin?: boolean
 }) {
   /* Parallax hero */
   const heroRef = useRef<HTMLElement>(null)
@@ -413,7 +425,7 @@ export function LandingPage({
             className="brightness-110 drop-shadow-[0_0_12px_rgba(201,162,39,0.3)] lg:w-[100px] lg:h-[70px]"
           />
           <div className="flex items-center gap-2">
-            <NavUserButton />
+            <NavUserButton isAdmin={isAdmin} />
             <Link
               href="/agendar"
               className="flex items-center gap-2 border border-[#c9a227]/50 bg-[#c9a227]/5 px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-[#c9a227] backdrop-blur-sm transition-all duration-300 hover:bg-[#c9a227] hover:text-black"
