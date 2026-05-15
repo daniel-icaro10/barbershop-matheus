@@ -170,7 +170,7 @@ export default async function AdminDashboard() {
                 <div key={booking.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
                   <div className="flex w-14 flex-col items-center">
                     <span className="font-bebas text-[1.1rem] leading-none text-[#c9a227]">
-                      {format(booking.date, "HH:mm")}
+                      {formatInTimeZone(booking.date, TZ, "HH:mm")}
                     </span>
                     <span className="mt-0.5 text-[9px] text-white/30">
                       {booking.service.durationInMinutes}min

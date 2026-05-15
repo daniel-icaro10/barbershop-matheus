@@ -9,6 +9,7 @@ import { returnValidationErrors } from "next-safe-action"
 import { headers } from "next/headers"
 import { revalidatePath } from "next/cache"
 import { toZonedTime } from "date-fns-tz"
+import { rateLimit } from "@/lib/rate-limit"
 import { z } from "zod"
 
 const inputSchema = z.object({
@@ -24,6 +25,11 @@ export const createBooking = actionClient
     const session = await auth.api.getSession({ headers: await headers() })
     if (!session?.user) {
       return returnValidationErrors(inputSchema, { _errors: ["Não autorizado. Faça login novamente."] })
+    }
+
+    // 5 booking attempts per user per minute
+    if (!rateLimit(`booking:${session.user.id}`, 5, 60_000)) {
+      return returnValidationErrors(inputSchema, { _errors: ["Muitas tentativas. Aguarde um momento."] })
     }
 
     const service = await prisma.barbershopService.findUnique({
