@@ -26,7 +26,7 @@ async function main() {
       address: "Rua da Barbearia, 123",
       description: "Barbearia premium com atendimento personalizado e técnicas modernas.",
       imageUrl: "/logo.png",
-      phones: [],
+      phones: ["5581989759980"],
     },
   })
   console.log("✅ Barbearia criada")

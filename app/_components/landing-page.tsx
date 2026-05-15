@@ -392,7 +392,7 @@ export function LandingPage({
   const heroContentOpacity = useTransform(scrollYProgress, [0, 0.65], [1, 0])
 
   /* WhatsApp */
-  const rawPhone = barbershop?.phones?.[0]?.replace(/\D/g, "") ?? "5511999999999"
+  const rawPhone = barbershop?.phones?.[0]?.replace(/\D/g, "") ?? "5581989759980"
   const phone = rawPhone.startsWith("55") ? rawPhone : `55${rawPhone}`
   const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent("Olá! Gostaria de agendar um horário na Matheus Barbeiro.")}`
 

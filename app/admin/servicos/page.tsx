@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { prisma } from "@/lib/prisma"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
 import Image from "next/image"
