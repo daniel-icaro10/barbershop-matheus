@@ -7,11 +7,11 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { formatInTimeZone } from "date-fns-tz"
 import { ptBR } from "date-fns/locale"
-
-const TZ = "America/Sao_Paulo"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft, Calendar, Clock, Scissors, CheckCircle2, XCircle, History, User, Sparkles } from "lucide-react"
+import { ArrowLeft, Calendar, Clock, Scissors, CheckCircle2, XCircle, History, User } from "lucide-react"
+
+const TZ = "America/Sao_Paulo"
 import { cn } from "@/lib/utils"
 import { CancelButton } from "./_components/cancel-button"
 import { LogoutButton } from "./_components/logout-button"
@@ -173,7 +173,6 @@ export default async function MinhaContaPage() {
               <span className="text-[10px] font-bold uppercase tracking-[0.38em] text-[#c9a227]">
                 {suggestions.length > 0 ? "Experimente também" : "Que tal repetir?"}
               </span>
-              <Sparkles className="size-3 text-[#c9a227]/50" />
             </div>
 
             <div className="grid grid-cols-2 gap-2.5">
