@@ -32,6 +32,10 @@ export const metadata: Metadata = {
   },
   description: "Agende seu horário com Matheus Barbeiro. Experiência premium, profissionais especializados.",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
