@@ -5,8 +5,10 @@ import { prisma } from "@/lib/prisma"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import { format } from "date-fns"
+import { formatInTimeZone } from "date-fns-tz"
 import { ptBR } from "date-fns/locale"
+
+const TZ = "America/Sao_Paulo"
 import Link from "next/link"
 import Image from "next/image"
 import { ArrowLeft, Calendar, Clock, Scissors, CheckCircle2, XCircle, History, User, Sparkles } from "lucide-react"
@@ -119,14 +121,14 @@ export default async function MinhaContaPage() {
                   <div className="flex items-center gap-1.5 text-sm text-white/60">
                     <Calendar className="size-3.5 text-[#c9a227]/60" />
                     <span className="capitalize">
-                      {format(new Date(nextBooking.date), "EEE, dd 'de' MMM", { locale: ptBR })}
+                      {formatInTimeZone(new Date(nextBooking.date), TZ, "EEE, dd 'de' MMM", { locale: ptBR })}
                     </span>
                   </div>
                   <div className="h-3.5 w-px bg-white/[0.08]" />
                   <div className="flex items-center gap-1.5 text-sm">
                     <Clock className="size-3.5 text-[#c9a227]/60" />
                     <span className="font-bold text-white">
-                      {format(new Date(nextBooking.date), "HH:mm")}
+                      {formatInTimeZone(new Date(nextBooking.date), TZ, "HH:mm")}
                     </span>
                   </div>
                 </div>
@@ -230,7 +232,7 @@ export default async function MinhaContaPage() {
                         {booking.service.name}
                       </p>
                       <p className="mt-0.5 text-[11px] text-white/40">
-                        {format(new Date(booking.date), "dd/MM/yyyy 'às' HH:mm")}
+                        {formatInTimeZone(new Date(booking.date), TZ, "dd/MM/yyyy 'às' HH:mm")}
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-1 shrink-0">

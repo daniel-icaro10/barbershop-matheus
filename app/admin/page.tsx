@@ -2,8 +2,11 @@ export const dynamic = "force-dynamic"
 
 import { prisma } from "@/lib/prisma"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
-import { startOfDay, endOfDay, format } from "date-fns"
+import { startOfDay, endOfDay } from "date-fns"
+import { toZonedTime, fromZonedTime, formatInTimeZone } from "date-fns-tz"
 import { ptBR } from "date-fns/locale"
+
+const TZ = "America/Sao_Paulo"
 import { CalendarDays, DollarSign, TrendingUp, XCircle } from "lucide-react"
 import Image from "next/image"
 
@@ -12,8 +15,9 @@ const fmt = (cents: number) =>
 
 export default async function AdminDashboard() {
   const now = new Date()
-  const todayStart = startOfDay(now)
-  const todayEnd = endOfDay(now)
+  const zonedNow = toZonedTime(now, TZ)
+  const todayStart = fromZonedTime(startOfDay(zonedNow), TZ)
+  const todayEnd = fromZonedTime(endOfDay(zonedNow), TZ)
 
   const [bookingsToday, cancelledToday, upcomingBookings, topServices, recentClients] =
     await Promise.all([
@@ -124,7 +128,7 @@ export default async function AdminDashboard() {
         <div className="flex items-center gap-2.5 mb-2">
           <div className="h-px w-5 bg-[#c9a227]" />
           <span className="text-[9px] font-bold uppercase tracking-[0.38em] text-[#c9a227] capitalize">
-            {format(now, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+            {formatInTimeZone(now, TZ, "EEEE, dd 'de' MMMM", { locale: ptBR })}
           </span>
         </div>
         <h1 className="font-bebas text-white leading-[0.88]" style={{ fontSize: "clamp(2.2rem,5vw,3rem)" }}>

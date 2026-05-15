@@ -2,8 +2,11 @@ export const dynamic = "force-dynamic"
 
 import { prisma } from "@/lib/prisma"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
-import { startOfDay, endOfDay, format, addDays } from "date-fns"
+import { startOfDay, endOfDay, addDays } from "date-fns"
+import { toZonedTime, fromZonedTime, formatInTimeZone } from "date-fns-tz"
 import { ptBR } from "date-fns/locale"
+
+const TZ = "America/Sao_Paulo"
 import Link from "next/link"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { AgendaTimeline } from "./_components/agenda-timeline"
@@ -14,19 +17,24 @@ interface Props {
 
 export default async function AgendaPage({ searchParams }: Props) {
   const { date: dateParam } = await searchParams
-  const selectedDate = dateParam ? new Date(dateParam + "T00:00:00") : new Date()
-  selectedDate.setHours(0, 0, 0, 0)
+  const now = new Date()
+  const todayParam = formatInTimeZone(now, TZ, "yyyy-MM-dd")
+  const dateStr = dateParam ?? todayParam
 
-  const prevDate = format(addDays(selectedDate, -1), "yyyy-MM-dd")
-  const nextDate = format(addDays(selectedDate, 1), "yyyy-MM-dd")
-  const todayParam = format(new Date(), "yyyy-MM-dd")
+  // Interpret date string as Brazil midnight → convert to UTC boundaries
+  const zonedDate = toZonedTime(new Date(dateStr + "T00:00:00"), TZ)
+  const dayStart = fromZonedTime(startOfDay(zonedDate), TZ)
+  const dayEnd = fromZonedTime(endOfDay(zonedDate), TZ)
+
+  const prevDate = formatInTimeZone(addDays(dayStart, -1), TZ, "yyyy-MM-dd")
+  const nextDate = formatInTimeZone(addDays(dayStart, 1), TZ, "yyyy-MM-dd")
 
   const [bookings, workingHours] = await Promise.all([
     prisma.booking.findMany({
       where: {
         barbershopId: DEFAULT_BARBERSHOP_ID,
         cancelled: false,
-        date: { gte: startOfDay(selectedDate), lte: endOfDay(selectedDate) },
+        date: { gte: dayStart, lte: dayEnd },
       },
       include: {
         service: { select: { name: true, durationInMinutes: true, priceInCents: true } },
@@ -39,7 +47,7 @@ export default async function AgendaPage({ searchParams }: Props) {
       where: {
         barbershopId_dayOfWeek: {
           barbershopId: DEFAULT_BARBERSHOP_ID,
-          dayOfWeek: selectedDate.getDay(),
+          dayOfWeek: zonedDate.getDay(),
         },
       },
     }),
@@ -59,7 +67,7 @@ export default async function AgendaPage({ searchParams }: Props) {
             <span className="text-[9px] font-bold uppercase tracking-[0.38em] text-[#c9a227]">Agenda</span>
           </div>
           <h1 className="font-bebas text-white leading-[0.88] capitalize" style={{ fontSize: "clamp(1.8rem,4vw,2.6rem)" }}>
-            {format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+            {formatInTimeZone(dayStart, TZ, "EEEE, dd 'de' MMMM", { locale: ptBR })}
           </h1>
         </div>
 
