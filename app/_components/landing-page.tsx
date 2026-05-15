@@ -549,7 +549,7 @@ export function LandingPage({
           <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
             {sortedServices.map((service, i) => (
               <FadeUp key={service.id} delay={0.05 * (i % 8)}>
-                <Link href="/agendar" className="group block">
+                <Link href={`/agendar?serviceId=${service.id}`} className="group block">
                   <div className="relative overflow-hidden aspect-[3/4] bg-[#111]">
                     <Image
                       src={service.imageUrl}

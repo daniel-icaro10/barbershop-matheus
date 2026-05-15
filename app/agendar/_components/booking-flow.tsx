@@ -20,14 +20,24 @@ const DRAFT_KEY = "booking-draft-pending"
 export default function BookingFlow({
   services,
   whatsappPhone,
+  initialService = null,
 }: {
   services: BarbershopService[]
   whatsappPhone: string
+  initialService?: BarbershopService | null
 }) {
   const store = useBookingStore()
   const { data: session } = authClient.useSession()
   const isLoggedIn = !!session?.user
   const isCreatingRef = useRef(false)
+
+  // Pre-select service from URL param and skip to date/time step
+  useEffect(() => {
+    if (!initialService) return
+    store.setService(initialService)
+    store.setStep(1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleCreateBooking = useCallback(async (): Promise<boolean> => {
     if (isCreatingRef.current) return false
