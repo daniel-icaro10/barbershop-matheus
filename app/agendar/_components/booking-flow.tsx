@@ -6,7 +6,7 @@ import { authClient } from "@/lib/auth-client"
 import { useBookingStore } from "@/lib/store/booking-store"
 import { createBooking } from "@/app/_actions/create-booking"
 import { toast } from "sonner"
-import type { BarbershopItem } from "@/generated/prisma/client"
+import type { BookingService } from "@/lib/store/booking-store"
 
 import BookingProgress from "./booking-progress"
 import StepService from "./step-service"
@@ -30,9 +30,9 @@ export default function BookingFlow({
   initialService = null,
   location = null,
 }: {
-  services: BarbershopItem[]
+  services: BookingService[]
   whatsappPhone: string
-  initialService?: BarbershopItem | null
+  initialService?: BookingService | null
   location?: LocationData | null
 }) {
   const store = useBookingStore()
@@ -63,7 +63,9 @@ export default function BookingFlow({
     const [h, m] = time.split(":").map(Number)
     bookingDate.setHours(h, m, 0, 0)
 
-    const result = await createBooking({ serviceId: service.id, date: bookingDate })
+    const { personalData } = useBookingStore.getState()
+    const phone = personalData?.phone?.replace(/\D/g, "") ?? undefined
+    const result = await createBooking({ serviceId: service.id, date: bookingDate, phone })
 
     if (result?.validationErrors || result?.serverError) {
       const msg =

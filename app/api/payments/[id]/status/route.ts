@@ -13,9 +13,14 @@ export async function GET(
   const { id } = await params
   const payment = await prisma.payment.findUnique({
     where: { id },
-    select: { status: true },
+    select: { status: true, order: { select: { customerId: true } } },
   })
 
   if (!payment) return NextResponse.json({ error: "Not found" }, { status: 404 })
+
+  const isOwner = payment.order.customerId === session.user.id
+  const isAdmin = (session.user as { role?: string }).role === "ADMIN"
+  if (!isOwner && !isAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+
   return NextResponse.json({ status: payment.status })
 }

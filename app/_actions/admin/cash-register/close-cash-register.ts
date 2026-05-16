@@ -16,12 +16,23 @@ export const closeCashRegister = adminActionClient
   .action(async ({ parsedInput, ctx }) => {
     const register = await prisma.cashRegister.findUniqueOrThrow({
       where: { id: parsedInput.registerId },
-      select: { id: true, closedAt: true, initialAmountInCents: true },
+      select: { id: true, closedAt: true, initialAmountInCents: true, openedAt: true, barbershopId: true },
     })
 
     if (register.closedAt) throw new Error("Caixa já foi fechado.")
 
+    // Sum all approved payments received while this register was open
+    const approvedPayments = await prisma.payment.aggregate({
+      _sum: { paidAmountInCents: true },
+      where: {
+        order: { barbershopId: register.barbershopId },
+        status: "APPROVED",
+        paidAt: { gte: register.openedAt },
+      },
+    })
+    const expectedRevenue = approvedPayments._sum.paidAmountInCents ?? 0
     const difference = parsedInput.finalAmountInCents - register.initialAmountInCents
+    const reconciliationDiff = parsedInput.finalAmountInCents - (register.initialAmountInCents + expectedRevenue)
 
     await prisma.cashRegister.update({
       where: { id: parsedInput.registerId },
@@ -35,5 +46,5 @@ export const closeCashRegister = adminActionClient
     })
 
     revalidatePath("/admin/caixa")
-    return { success: true, difference }
+    return { success: true, difference, expectedRevenue, reconciliationDiff }
   })

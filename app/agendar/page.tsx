@@ -15,6 +15,7 @@ export default async function AgendarPage({ searchParams }: Props) {
     prisma.barbershopItem.findMany({
       where: { barbershopId: DEFAULT_BARBERSHOP_ID, isActive: true, type: "SERVICE" },
       orderBy: { priceInCents: "asc" },
+      select: { id: true, name: true, priceInCents: true, durationInMinutes: true, barbershopId: true, imageUrl: true, description: true, isActive: true, type: true },
     }),
     prisma.barbershop.findUnique({
       where: { id: DEFAULT_BARBERSHOP_ID },

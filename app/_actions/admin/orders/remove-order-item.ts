@@ -14,6 +14,12 @@ const inputSchema = z.object({
 export const removeOrderItem = adminActionClient
   .inputSchema(inputSchema)
   .action(async ({ parsedInput }) => {
+    const approvedPayment = await prisma.payment.findFirst({
+      where: { orderId: parsedInput.orderId, status: "APPROVED" },
+      select: { id: true },
+    })
+    if (approvedPayment) throw new Error("Não é possível remover itens de uma comanda com pagamento aprovado.")
+
     await prisma.$transaction(async (tx) => {
       const orderItem = await tx.orderItem.findUniqueOrThrow({
         where: { id: parsedInput.orderItemId },

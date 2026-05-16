@@ -10,27 +10,28 @@ import { headers } from "next/headers"
 import { revalidatePath } from "next/cache"
 import { after } from "next/server"
 import { toZonedTime, formatInTimeZone } from "date-fns-tz"
-import { rateLimit } from "@/lib/rate-limit"
+import { rateLimitBooking } from "@/lib/rate-limit"
 import { sendPushToUser, sendPushToAdmins } from "@/lib/push"
 import { z } from "zod"
 
 const inputSchema = z.object({
   serviceId: z.string().uuid(),
   date: z.coerce.date(),
+  phone: z.string().optional(),
 })
 
 const UNAVAILABLE_MSG = "Horário não disponível. Por favor, escolha outro horário."
 
 export const createBooking = actionClient
   .inputSchema(inputSchema)
-  .action(async ({ parsedInput: { serviceId, date } }) => {
+  .action(async ({ parsedInput: { serviceId, date, phone } }) => {
     const session = await auth.api.getSession({ headers: await headers() })
     if (!session?.user) {
       return returnValidationErrors(inputSchema, { _errors: ["Não autorizado. Faça login novamente."] })
     }
 
-    // 5 booking attempts per user per minute
-    if (!rateLimit(`booking:${session.user.id}`, 5, 60_000)) {
+    // 5 bookings per user per minute (DB-based, safe on multi-instance serverless)
+    if (!(await rateLimitBooking(session.user.id, 5, 60_000))) {
       return returnValidationErrors(inputSchema, { _errors: ["Muitas tentativas. Aguarde um momento."] })
     }
 
@@ -72,6 +73,10 @@ export const createBooking = actionClient
           select: { id: true },
         })
         if (conflict) throw new Error("SLOT_TAKEN")
+
+        if (phone) {
+          await tx.user.update({ where: { id: session.user.id }, data: { phone } })
+        }
 
         return tx.booking.create({
           data: {

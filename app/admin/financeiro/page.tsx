@@ -43,11 +43,11 @@ export default async function FinanceiroDashboard() {
     pendingPayments,
     approvedPaymentsMonth,
     recentTimeline,
-    topItems,
+    ,
     last30Orders,
     lowStockItems,
   ] = await Promise.all([
-    // Closed orders this month (with items for cost/commission)
+    // Closed orders this month (with items for cost/commission/top-items)
     prisma.order.findMany({
       where: {
         barbershopId: DEFAULT_BARBERSHOP_ID,
@@ -55,7 +55,7 @@ export default async function FinanceiroDashboard() {
         closedAt: { gte: monthStart, lte: monthEnd },
       },
       include: {
-        items: { include: { item: { select: { costInCents: true, commissionType: true, commissionValue: true } } } },
+        items: { include: { item: { select: { name: true, type: true, costInCents: true, commissionType: true, commissionValue: true } } } },
         payments: { where: { status: "APPROVED" }, select: { paidAmountInCents: true } },
       },
     }),
@@ -112,15 +112,8 @@ export default async function FinanceiroDashboard() {
       take: 12,
       select: { id: true, type: true, message: true, createdAt: true, orderId: true },
     }),
-    // Top items this month
-    prisma.orderItem.groupBy({
-      by: ["itemId"],
-      where: { order: { barbershopId: DEFAULT_BARBERSHOP_ID, status: "CLOSED", closedAt: { gte: monthStart } } },
-      _sum: { totalInCents: true },
-      _count: { itemId: true },
-      orderBy: { _sum: { totalInCents: "desc" } },
-      take: 5,
-    }),
+    // Placeholder — top items derived in-memory from closedOrdersMonth
+    Promise.resolve([] as never[]),
     // Last 30 days orders for chart
     prisma.order.findMany({
       where: {
@@ -159,7 +152,7 @@ export default async function FinanceiroDashboard() {
     for (const oi of order.items) {
       if (oi.item.costInCents) totalCost += oi.item.costInCents * oi.quantity
       if (oi.item.commissionType && oi.item.commissionValue) {
-        totalCommission += calculateCommission(oi.totalInCents, oi.item.commissionType, oi.item.commissionValue) * oi.quantity
+        totalCommission += calculateCommission(oi.totalInCents, oi.item.commissionType, oi.item.commissionValue)
       }
     }
   }
@@ -180,17 +173,23 @@ export default async function FinanceiroDashboard() {
     chartData.push({ date: dayStr, value: dayRevenue })
   }
 
-  // Top items with names
-  const topItemIds = topItems.map((t) => t.itemId)
-  const topItemNames = await prisma.barbershopItem.findMany({
-    where: { id: { in: topItemIds } },
-    select: { id: true, name: true, type: true },
-  })
-  const topItemsWithNames = topItems.map((t) => ({
-    ...t,
-    name: topItemNames.find((i) => i.id === t.itemId)?.name ?? "—",
-    type: topItemNames.find((i) => i.id === t.itemId)?.type ?? "SERVICE",
-  }))
+  // Top items derived in-memory from already-fetched closedOrdersMonth data (no extra query)
+  const itemAgg = new Map<string, { name: string; type: string; total: number; count: number }>()
+  for (const order of closedOrdersMonth) {
+    for (const oi of order.items) {
+      const existing = itemAgg.get(oi.itemId)
+      if (existing) {
+        existing.total += oi.totalInCents
+        existing.count += oi.quantity
+      } else {
+        itemAgg.set(oi.itemId, { name: oi.item.name, type: oi.item.type, total: oi.totalInCents, count: oi.quantity })
+      }
+    }
+  }
+  const topItemsWithNames = Array.from(itemAgg.entries())
+    .map(([id, v]) => ({ itemId: id, name: v.name, type: v.type, _sum: { totalInCents: v.total }, _count: { itemId: v.count } }))
+    .sort((a, b) => b._sum.totalInCents - a._sum.totalInCents)
+    .slice(0, 5)
 
   const alertItems = lowStockItems.filter((i) => {
     const min = i.minimumStock ?? 2

@@ -29,6 +29,7 @@ export const createPixPayment = adminActionClient
       throw new Error("Valor não pode ser maior que o total da comanda.")
     }
 
+    // First pass: fast pre-check before calling the MP API
     const pendingExists = await prisma.payment.findFirst({
       where: { orderId: parsedInput.orderId, status: "PENDING", method: "PIX" },
       select: { id: true },
@@ -47,19 +48,38 @@ export const createPixPayment = adminActionClient
       notificationUrl: `${appUrl}/api/webhooks/mercadopago`,
     })
 
-    const payment = await prisma.payment.create({
-      data: {
-        orderId: parsedInput.orderId,
-        provider: "MERCADO_PAGO",
-        method: "PIX",
-        status: "PENDING",
-        externalPaymentId: result.externalPaymentId,
-        qrCode: result.qrCode,
-        qrCodeBase64: result.qrCodeBase64,
-        pixCopyPaste: result.pixCopyPaste,
-        transactionAmountInCents: parsedInput.amountInCents,
-      },
-    })
+    // Second pass: atomic check + create to close the race window.
+    // If two requests both passed the pre-check, only one succeeds here.
+    // The other gets its MP payment cancelled.
+    let payment
+    try {
+      payment = await prisma.$transaction(async (tx) => {
+        const stillExists = await tx.payment.findFirst({
+          where: { orderId: parsedInput.orderId, status: "PENDING", method: "PIX" },
+          select: { id: true },
+        })
+        if (stillExists) throw new Error("DUPLICATE_PIX")
+        return tx.payment.create({
+          data: {
+            orderId: parsedInput.orderId,
+            provider: "MERCADO_PAGO",
+            method: "PIX",
+            status: "PENDING",
+            externalPaymentId: result.externalPaymentId,
+            qrCode: result.qrCode,
+            qrCodeBase64: result.qrCodeBase64,
+            pixCopyPaste: result.pixCopyPaste,
+            transactionAmountInCents: parsedInput.amountInCents,
+          },
+        })
+      })
+    } catch (err) {
+      if (err instanceof Error && err.message === "DUPLICATE_PIX") {
+        await provider.cancelPayment(result.externalPaymentId).catch(() => {})
+        throw new Error("Já existe um pagamento PIX pendente para esta comanda.")
+      }
+      throw err
+    }
 
     await prisma.orderTimelineEvent.create({ data: { orderId: parsedInput.orderId, type: "PIX_GENERATED", message: `PIX gerado — ${(parsedInput.amountInCents / 100).toFixed(2).replace(".", ",")}` } })
 

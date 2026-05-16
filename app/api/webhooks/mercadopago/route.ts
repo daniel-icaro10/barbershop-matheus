@@ -23,6 +23,10 @@ function validateSignature(req: NextRequest, rawBody: string): boolean {
   const ts = parts["ts"] ?? ""
   const v1 = parts["v1"] ?? ""
 
+  const tsNum = parseInt(ts, 10)
+  const nowSec = Math.floor(Date.now() / 1000)
+  if (isNaN(tsNum) || Math.abs(nowSec - tsNum) > 300) return false
+
   const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`
   const hmac = createHmac("sha256", secret).update(manifest).digest("hex")
 

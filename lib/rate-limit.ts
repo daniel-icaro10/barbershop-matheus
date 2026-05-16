@@ -1,24 +1,13 @@
-// In-memory rate limiter. Resets on each cold start (acceptable for
-// a single-barbershop app on Vercel's function instances).
+import { prisma } from "@/lib/prisma"
 
-interface Entry {
-  count: number
-  resetAt: number
-}
-
-const store = new Map<string, Entry>()
-
-export function rateLimit(key: string, limit: number, windowMs: number): boolean {
-  const now = Date.now()
-  const entry = store.get(key)
-
-  if (!entry || now > entry.resetAt) {
-    store.set(key, { count: 1, resetAt: now + windowMs })
-    return true // allowed
-  }
-
-  if (entry.count >= limit) return false // blocked
-
-  entry.count++
-  return true // allowed
+/**
+ * DB-based rate limiter — safe on multi-instance Vercel deployments.
+ * Counts bookings created by the user within the last `windowMs` ms.
+ */
+export async function rateLimitBooking(userId: string, limit: number, windowMs: number): Promise<boolean> {
+  const since = new Date(Date.now() - windowMs)
+  const count = await prisma.booking.count({
+    where: { userId, date: { gte: since } },
+  })
+  return count < limit
 }

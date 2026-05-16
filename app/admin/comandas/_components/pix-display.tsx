@@ -29,11 +29,8 @@ export function PixDisplay({ paymentId, qrCodeBase64, pixCopyPaste, amountInCent
   useEffect(() => {
     if (!polling) return
 
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       setElapsed((e) => e + 5)
-    }, 5000)
-
-    const check = setInterval(async () => {
       try {
         const res = await fetch(`/api/payments/${paymentId}/status`)
         if (!res.ok) return
@@ -48,10 +45,7 @@ export function PixDisplay({ paymentId, qrCodeBase64, pixCopyPaste, amountInCent
       }
     }, 5000)
 
-    return () => {
-      clearInterval(interval)
-      clearInterval(check)
-    }
+    return () => clearInterval(interval)
   }, [paymentId, polling, onApproved])
 
   return (

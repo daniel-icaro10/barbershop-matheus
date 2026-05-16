@@ -1,5 +1,4 @@
 import { create } from "zustand"
-import type { BarbershopItem } from "@/generated/prisma/client"
 
 export interface PersonalData {
   name: string
@@ -7,19 +6,32 @@ export interface PersonalData {
   notes: string
 }
 
+// Only public-facing fields — no cost, commission, or stock data
+export interface BookingService {
+  id: string
+  name: string
+  priceInCents: number
+  durationInMinutes: number
+  barbershopId: string
+  imageUrl: string | null
+  description: string | null
+  isActive: boolean
+  type: string
+}
+
 // 0=Serviço, 1=Horário, 2=Dados, 3=Acesso, 4=Confirmação
 export type Step = 0 | 1 | 2 | 3 | 4
 
 interface BookingStore {
   step: Step
-  service: BarbershopItem | null
+  service: BookingService | null
   date: Date | null
   time: string | null
   personalData: PersonalData | null
   bookingId: string | null
 
   setStep: (step: Step) => void
-  setService: (service: BarbershopItem) => void
+  setService: (service: BookingService) => void
   setDate: (date: Date | null) => void
   setTime: (time: string | null) => void
   setPersonalData: (data: PersonalData) => void
