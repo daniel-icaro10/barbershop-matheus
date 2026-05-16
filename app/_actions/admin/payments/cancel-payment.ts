@@ -34,6 +34,8 @@ export const cancelPayment = adminActionClient
       data: { status: "CANCELED" },
     })
 
+    await prisma.orderTimelineEvent.create({ data: { orderId: payment.orderId, type: "PIX_CANCELED", message: "PIX cancelado" } })
+
     revalidatePath(`/admin/comandas/${payment.orderId}`)
     return { success: true }
   })

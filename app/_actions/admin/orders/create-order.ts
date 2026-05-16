@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
+import { timelineEvent } from "./_timeline"
 
 const inputSchema = z.object({
   customerId: z.string(),
@@ -23,13 +24,17 @@ export const createOrder = adminActionClient
       if (existing) return { order: existing }
     }
 
-    const order = await prisma.order.create({
-      data: {
-        barbershopId: DEFAULT_BARBERSHOP_ID,
-        customerId: parsedInput.customerId,
-        bookingId: parsedInput.bookingId ?? null,
-        notes: parsedInput.notes ?? null,
-      },
+    const order = await prisma.$transaction(async (tx) => {
+      const newOrder = await tx.order.create({
+        data: {
+          barbershopId: DEFAULT_BARBERSHOP_ID,
+          customerId: parsedInput.customerId,
+          bookingId: parsedInput.bookingId ?? null,
+          notes: parsedInput.notes ?? null,
+        },
+      })
+      await tx.orderTimelineEvent.create({ data: timelineEvent(newOrder.id, "ORDER_CREATED", "Comanda criada") })
+      return newOrder
     })
     revalidatePath("/admin/comandas")
     return { order }

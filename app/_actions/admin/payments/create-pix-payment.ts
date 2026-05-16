@@ -61,6 +61,8 @@ export const createPixPayment = adminActionClient
       },
     })
 
+    await prisma.orderTimelineEvent.create({ data: { orderId: parsedInput.orderId, type: "PIX_GENERATED", message: `PIX gerado — ${(parsedInput.amountInCents / 100).toFixed(2).replace(".", ",")}` } })
+
     revalidatePath(`/admin/comandas/${parsedInput.orderId}`)
     return { payment }
   })

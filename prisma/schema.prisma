@@ -46,6 +46,19 @@ enum PaymentStatus {
   CANCELED
 }
 
+enum TimelineEventType {
+  ORDER_CREATED
+  ITEM_ADDED
+  ITEM_REMOVED
+  DISCOUNT_APPLIED
+  PIX_GENERATED
+  PIX_APPROVED
+  PIX_CANCELED
+  PAYMENT_REJECTED
+  ORDER_CLOSED
+  ORDER_CANCELED
+}
+
 // ─── Models ────────────────────────────────────────────────────────────────
 
 model Barbershop {
@@ -133,6 +146,7 @@ model Order {
 
   items    OrderItem[]
   payments Payment[]
+  timeline OrderTimelineEvent[]
 
   @@index([barbershopId, status])
   @@index([barbershopId, createdAt])
@@ -213,6 +227,19 @@ model Review {
 
   @@index([barbershopId, approved])
   @@index([customerId])
+}
+
+model OrderTimelineEvent {
+  id        String             @id @default(uuid())
+  orderId   String
+  order     Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  type      TimelineEventType
+  message   String
+  metadata  Json?
+  createdAt DateTime           @default(now())
+  createdBy String?
+
+  @@index([orderId, createdAt])
 }
 
 model User {

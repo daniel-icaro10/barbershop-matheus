@@ -4,6 +4,7 @@ import { adminActionClient } from "@/lib/action-client"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
+import { timelineEvent } from "./_timeline"
 
 const inputSchema = z.object({
   orderId: z.string().uuid(),
@@ -23,12 +24,16 @@ export const applyDiscount = adminActionClient
       throw new Error("Desconto não pode ser maior que o subtotal.")
     }
 
-    await prisma.order.update({
-      where: { id: parsedInput.orderId },
-      data: {
-        discountInCents: parsedInput.discountInCents,
-        totalInCents: order.subtotalInCents - parsedInput.discountInCents,
-      },
+    const { orderId, discountInCents } = parsedInput
+    await prisma.$transaction(async (tx) => {
+      await tx.order.update({
+        where: { id: orderId },
+        data: {
+          discountInCents,
+          totalInCents: order.subtotalInCents - discountInCents,
+        },
+      })
+      await tx.orderTimelineEvent.create({ data: timelineEvent(orderId, "DISCOUNT_APPLIED", `Desconto de ${discountInCents / 100} aplicado`, { discountInCents }) })
     })
 
     revalidatePath(`/admin/comandas/${parsedInput.orderId}`)

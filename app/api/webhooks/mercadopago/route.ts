@@ -85,6 +85,8 @@ export async function POST(req: NextRequest) {
       })
 
       if (newStatus === "APPROVED") {
+        await tx.orderTimelineEvent.create({ data: { orderId: payment.orderId, type: "PIX_APPROVED", message: "PIX aprovado" } })
+
         const order = await tx.order.findUnique({
           where: { id: payment.orderId },
           include: { payments: { where: { status: "APPROVED" }, select: { paidAmountInCents: true } } },

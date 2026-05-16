@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { calculateCommission } from "@/lib/utils/commission"
 import { z } from "zod"
+import { timelineEvent } from "./_timeline"
 
 const inputSchema = z.object({
   orderId: z.string().uuid(),
@@ -65,6 +66,8 @@ export const addOrderItem = adminActionClient
         where: { id: parsedInput.orderId },
         data: { subtotalInCents: subtotal, totalInCents: Math.max(0, subtotal - orderData.discountInCents) },
       })
+      const itemTotal = unitPrice * parsedInput.quantity
+      await tx.orderTimelineEvent.create({ data: timelineEvent(parsedInput.orderId, "ITEM_ADDED", `${item.name} adicionado`, { itemName: item.name, quantity: parsedInput.quantity, totalInCents: itemTotal }) })
     })
 
     revalidatePath(`/admin/comandas/${parsedInput.orderId}`)

@@ -5,7 +5,7 @@ import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboard, Calendar, Users, Clock, Ban, Package, LogOut, X,
-  ShoppingBag, Vault, MapPin, Star,
+  ShoppingBag, Vault, MapPin, Star, TrendingUp,
 } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/app/_components/ui/avatar
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/admin/financeiro", label: "Financeiro", icon: TrendingUp },
   { href: "/admin/agenda", label: "Agenda", icon: Calendar },
   { href: "/admin/comandas", label: "Comandas", icon: ShoppingBag },
   { href: "/admin/itens", label: "Itens & Produtos", icon: Package },

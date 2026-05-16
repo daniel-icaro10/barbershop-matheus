@@ -4,6 +4,7 @@ import { adminActionClient } from "@/lib/action-client"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
+import { timelineEvent } from "./_timeline"
 
 const inputSchema = z.object({
   orderId: z.string().uuid(),
@@ -38,6 +39,7 @@ export const cancelOrder = adminActionClient
         where: { id: parsedInput.orderId },
         data: { status: "CANCELED" },
       })
+      await tx.orderTimelineEvent.create({ data: timelineEvent(parsedInput.orderId, "ORDER_CANCELED", "Comanda cancelada") })
     })
 
     revalidatePath("/admin/comandas")

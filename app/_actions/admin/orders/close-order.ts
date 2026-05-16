@@ -4,6 +4,7 @@ import { adminActionClient } from "@/lib/action-client"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
+import { timelineEvent } from "./_timeline"
 
 const inputSchema = z.object({
   orderId: z.string().uuid(),
@@ -26,9 +27,12 @@ export const closeOrder = adminActionClient
       throw new Error(`Saldo pendente de ${((order.totalInCents - totalPaid) / 100).toFixed(2)}`)
     }
 
-    await prisma.order.update({
-      where: { id: parsedInput.orderId },
-      data: { status: "CLOSED", closedAt: new Date() },
+    await prisma.$transaction(async (tx) => {
+      await tx.order.update({
+        where: { id: parsedInput.orderId },
+        data: { status: "CLOSED", closedAt: new Date() },
+      })
+      await tx.orderTimelineEvent.create({ data: timelineEvent(parsedInput.orderId, "ORDER_CLOSED", "Comanda fechada") })
     })
 
     revalidatePath("/admin/comandas")

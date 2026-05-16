@@ -13,6 +13,7 @@ import { PaymentSheet } from "../_components/payment-sheet"
 import { CloseOrderButton } from "./_components/close-order-button"
 import { RemoveItemButton } from "./_components/remove-item-button"
 import { DiscountForm } from "./_components/discount-form"
+import { OrderTimeline } from "./_components/order-timeline"
 
 const TZ = "America/Sao_Paulo"
 
@@ -33,6 +34,7 @@ export default async function OrderDetailPage({ params }: Props) {
           orderBy: { id: "asc" },
         },
         payments: { orderBy: { createdAt: "desc" } },
+        timeline: { orderBy: { createdAt: "asc" }, select: { id: true, type: true, message: true, createdAt: true } },
       },
     }),
     prisma.barbershopItem.findMany({
@@ -251,6 +253,12 @@ export default async function OrderDetailPage({ params }: Props) {
           <span className="text-sm font-semibold text-emerald-400">
             Comanda fechada em {formatInTimeZone(order.closedAt!, TZ, "dd/MM/yyyy 'às' HH:mm")}
           </span>
+        </div>
+      )}
+
+      {order.timeline.length > 0 && (
+        <div className="mt-8">
+          <OrderTimeline events={order.timeline} />
         </div>
       )}
     </div>
