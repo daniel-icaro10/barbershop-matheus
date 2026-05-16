@@ -19,17 +19,17 @@ export default function BookingProgress({ currentStep }: { currentStep: number }
           <Link
             href="/"
             aria-label="Voltar ao início"
-            className="flex size-11 shrink-0 items-center justify-center border border-white/10 text-white/50 transition-all hover:border-[#c9a227]/40 hover:text-[#c9a227]"
+            className="flex size-11 shrink-0 items-center justify-center border border-white/25 text-white/80 transition-all hover:border-[#c9a227]/60 hover:text-[#c9a227]"
           >
-            <ChevronLeft className="size-4" />
+            <ChevronLeft className="size-5" />
           </Link>
         ) : (
           <button
             onClick={back}
             aria-label="Voltar ao passo anterior"
-            className="flex size-11 shrink-0 items-center justify-center border border-white/10 text-white/50 transition-all hover:border-[#c9a227]/40 hover:text-[#c9a227]"
+            className="flex size-11 shrink-0 items-center justify-center border border-white/25 text-white/80 transition-all hover:border-[#c9a227]/60 hover:text-[#c9a227]"
           >
-            <ChevronLeft className="size-4" />
+            <ChevronLeft className="size-5" />
           </button>
         )}
 
