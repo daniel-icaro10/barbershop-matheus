@@ -59,7 +59,7 @@ export default async function MinhaContaPage() {
         <div className="mb-8 flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-sm text-white/40 transition-colors hover:text-white/70"
+            className="flex min-h-[44px] items-center gap-1.5 pr-3 text-sm text-white/40 transition-colors hover:text-white/70"
           >
             <ArrowLeft className="size-4" />
             Início
@@ -142,7 +142,7 @@ export default async function MinhaContaPage() {
                 <div className="mt-4 flex items-center justify-between">
                   <Link
                     href="/agendar"
-                    className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#c9a227]/60 transition-colors hover:text-[#c9a227]"
+                    className="flex min-h-[44px] items-center text-[11px] font-bold uppercase tracking-[0.2em] text-[#c9a227]/60 transition-colors hover:text-[#c9a227]"
                   >
                     + Novo agendamento
                   </Link>

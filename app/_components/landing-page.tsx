@@ -300,11 +300,15 @@ function NavUserButton({ isAdmin = false }: { isAdmin?: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
+    function handleOutside(e: MouseEvent | TouchEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
+    document.addEventListener("mousedown", handleOutside)
+    document.addEventListener("touchstart", handleOutside, { passive: true })
+    return () => {
+      document.removeEventListener("mousedown", handleOutside)
+      document.removeEventListener("touchstart", handleOutside)
+    }
   }, [])
 
   if (session?.user) {
@@ -313,7 +317,7 @@ function NavUserButton({ isAdmin = false }: { isAdmin?: boolean }) {
         {/* Trigger */}
         <button
           onClick={() => setOpen((v) => !v)}
-          className="flex items-center gap-2 border border-white/10 bg-white/5 px-3 py-2 backdrop-blur-sm transition-all duration-300 hover:border-[#c9a227]/40 hover:bg-[#c9a227]/8"
+          className="flex min-h-[44px] items-center gap-2 border border-white/10 bg-white/5 px-3 backdrop-blur-sm transition-all duration-300 hover:border-[#c9a227]/40 hover:bg-[#c9a227]/8"
         >
           {session.user.image ? (
             <Image
@@ -355,7 +359,7 @@ function NavUserButton({ isAdmin = false }: { isAdmin?: boolean }) {
                 <Link
                   href="/admin"
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 border-b border-[#c9a227]/15 bg-[#c9a227]/[0.06] px-4 py-3 transition-colors hover:bg-[#c9a227]/12 group"
+                  className="flex min-h-[44px] items-center gap-3 border-b border-[#c9a227]/15 bg-[#c9a227]/[0.06] px-4 transition-colors hover:bg-[#c9a227]/12 group"
                 >
                   <div className="flex size-6 items-center justify-center bg-[#c9a227]/15">
                     <LayoutDashboard className="size-3.5 text-[#c9a227]" />
@@ -371,7 +375,7 @@ function NavUserButton({ isAdmin = false }: { isAdmin?: boolean }) {
               <Link
                 href="/minha-conta"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-white/[0.04] border-b border-white/[0.04]"
+                className="flex min-h-[44px] items-center gap-3 px-4 transition-colors hover:bg-white/[0.04] border-b border-white/[0.04]"
               >
                 <div className="flex size-6 items-center justify-center bg-white/[0.06]">
                   <User className="size-3.5 text-white/50" />
@@ -386,7 +390,7 @@ function NavUserButton({ isAdmin = false }: { isAdmin?: boolean }) {
                   await authClient.signOut()
                   window.location.href = "/"
                 }}
-                className="flex w-full items-center gap-3 px-4 py-3 transition-colors hover:bg-red-500/[0.06]"
+                className="flex min-h-[44px] w-full items-center gap-3 px-4 transition-colors hover:bg-red-500/[0.06]"
               >
                 <div className="flex size-6 items-center justify-center bg-red-500/10">
                   <LogOut className="size-3.5 text-red-400/70" />
@@ -403,7 +407,7 @@ function NavUserButton({ isAdmin = false }: { isAdmin?: boolean }) {
   return (
     <Link
       href="/login"
-      className="flex items-center gap-1.5 border border-white/10 bg-white/5 px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white/50 backdrop-blur-sm transition-all duration-300 hover:border-white/20 hover:text-white/80"
+      className="flex min-h-[44px] items-center gap-1.5 border border-white/10 bg-white/5 px-4 text-[10px] font-bold uppercase tracking-[0.22em] text-white/50 backdrop-blur-sm transition-all duration-300 hover:border-white/20 hover:text-white/80"
     >
       <User className="size-3" />
       Entrar
@@ -486,18 +490,20 @@ export function LandingPage({
       {/* ── NAVBAR ── */}
       <header className="fixed inset-x-0 top-0 z-50 pointer-events-none">
         <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-b from-black/75 via-black/30 to-transparent pointer-events-auto">
-          <Image
-            src="/logo.png"
-            alt="Matheus Barbeiro"
-            width={72}
-            height={50}
-            className="brightness-110 drop-shadow-[0_0_12px_rgba(201,162,39,0.3)] lg:w-[100px] lg:h-[70px]"
-          />
+          <Link href="/" className="shrink-0">
+            <Image
+              src="/logo.png"
+              alt="Matheus Barbeiro"
+              width={72}
+              height={50}
+              className="brightness-110 drop-shadow-[0_0_12px_rgba(201,162,39,0.3)] lg:w-[100px] lg:h-[70px]"
+            />
+          </Link>
           <div className="flex items-center gap-2">
             <NavUserButton isAdmin={isAdmin} />
             <Link
               href="/agendar"
-              className="flex items-center gap-2 border border-[#c9a227]/50 bg-[#c9a227]/5 px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.22em] text-[#c9a227] backdrop-blur-sm transition-all duration-300 hover:bg-[#c9a227] hover:text-black"
+              className="flex min-h-[44px] items-center gap-2 border border-[#c9a227]/50 bg-[#c9a227]/5 px-4 text-[10px] font-bold uppercase tracking-[0.22em] text-[#c9a227] backdrop-blur-sm transition-all duration-300 hover:bg-[#c9a227] hover:text-black"
             >
               <Calendar className="size-3" />
               Agendar

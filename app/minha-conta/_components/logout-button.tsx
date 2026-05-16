@@ -21,7 +21,7 @@ export function LogoutButton() {
     <button
       onClick={handleLogout}
       disabled={isPending}
-      className="flex items-center gap-1.5 text-sm text-white/30 transition-colors hover:text-white/60 disabled:opacity-50"
+      className="flex min-h-[44px] items-center gap-1.5 px-2 text-sm text-white/30 transition-colors hover:text-white/60 disabled:opacity-50"
     >
       <LogOut className="size-3.5" />
       Sair

@@ -220,7 +220,7 @@ export default function StepAuth({ isLoggedIn, onGoogleLogin, onBookingCreate }:
           >
             <button
               onClick={() => { setLoginMode("options"); setEmailError("") }}
-              className="mb-4 flex items-center gap-1 text-sm text-white/35 transition-colors hover:text-white/70"
+              className="mb-2 flex min-h-[44px] items-center gap-1 text-sm text-white/35 transition-colors hover:text-white/70"
             >
               <ChevronLeft className="size-4" />
               Outras opções
@@ -234,7 +234,8 @@ export default function StepAuth({ isLoggedIn, onGoogleLogin, onBookingCreate }:
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
-                className="w-full border border-white/[0.07] bg-white/[0.03] px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-[#c9a227]/50 focus:ring-1 focus:ring-[#c9a227]/15 transition-all"
+                className="w-full border border-white/[0.07] bg-white/[0.03] px-4 py-3.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-[#c9a227]/50 focus:ring-1 focus:ring-[#c9a227]/15 transition-all"
+                style={{ minHeight: 44 }}
               />
               <input
                 type="password"
@@ -243,7 +244,8 @@ export default function StepAuth({ isLoggedIn, onGoogleLogin, onBookingCreate }:
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
-                className="w-full border border-white/[0.07] bg-white/[0.03] px-4 py-3 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-[#c9a227]/50 focus:ring-1 focus:ring-[#c9a227]/15 transition-all"
+                className="w-full border border-white/[0.07] bg-white/[0.03] px-4 py-3.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-[#c9a227]/50 focus:ring-1 focus:ring-[#c9a227]/15 transition-all"
+                style={{ minHeight: 44 }}
               />
 
               <AnimatePresence>
