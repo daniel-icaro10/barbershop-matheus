@@ -11,7 +11,7 @@ import { revalidatePath } from "next/cache"
 import { after } from "next/server"
 import { toZonedTime, formatInTimeZone } from "date-fns-tz"
 import { rateLimit } from "@/lib/rate-limit"
-import { sendPushToUser } from "@/lib/push"
+import { sendPushToUser, sendPushToAdmins } from "@/lib/push"
 import { z } from "zod"
 
 const inputSchema = z.object({
@@ -91,13 +91,21 @@ export const createBooking = actionClient
       const bookingSnapshot = booking
       const serviceSnapshot = service
       const userId = session.user.id
+      const clientName = session.user.name ?? "Cliente"
       after(async () => {
         const dateStr = formatInTimeZone(bookingSnapshot.date, "America/Sao_Paulo", "dd/MM/yyyy 'às' HH:mm")
-        await sendPushToUser(userId, {
-          title: "Agendamento confirmado ✂️",
-          body: `${serviceSnapshot.name} — ${dateStr}`,
-          url: "/minha-conta",
-        }).catch(console.error)
+        await Promise.allSettled([
+          sendPushToUser(userId, {
+            title: "Agendamento confirmado ✂️",
+            body: `${serviceSnapshot.name} — ${dateStr}`,
+            url: "/minha-conta",
+          }),
+          sendPushToAdmins({
+            title: `Novo agendamento — ${clientName}`,
+            body: `${serviceSnapshot.name} — ${dateStr}`,
+            url: "/admin/agenda",
+          }),
+        ])
       })
 
       return booking

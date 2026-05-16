@@ -38,3 +38,11 @@ export async function sendPushToUser(userId: string, payload: PushPayload) {
     await prisma.pushSubscription.deleteMany({ where: { endpoint: { in: toDelete } } })
   }
 }
+
+export async function sendPushToAdmins(payload: PushPayload) {
+  const admins = await prisma.user.findMany({
+    where: { role: "ADMIN" },
+    select: { id: true },
+  })
+  await Promise.allSettled(admins.map((a) => sendPushToUser(a.id, payload)))
+}
