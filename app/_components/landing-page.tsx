@@ -489,7 +489,7 @@ export function LandingPage({
 
       {/* ── NAVBAR ── */}
       <header className="fixed inset-x-0 top-0 z-50">
-        <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-b from-black/75 via-black/30 to-transparent">
+        <div className="safe-top flex items-center justify-between px-5 py-4 bg-gradient-to-b from-black/75 via-black/30 to-transparent">
           <Link href="/" className="shrink-0">
             <Image
               src="/logo.png"

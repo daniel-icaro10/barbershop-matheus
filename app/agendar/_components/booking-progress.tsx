@@ -14,12 +14,12 @@ export default function BookingProgress({ currentStep }: { currentStep: number }
 
   return (
     <header className="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur-xl border-b border-white/[0.06]">
-      <div className="flex items-center gap-3 px-4 py-3.5">
+      <div className="safe-top flex items-center gap-3 px-4 py-3.5">
         {currentStep === 0 ? (
           <Link
             href="/"
             aria-label="Voltar ao início"
-            className="flex size-11 shrink-0 items-center justify-center border border-white/25 text-white/80 transition-all hover:border-[#c9a227]/60 hover:text-[#c9a227]"
+            className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/10 border border-white/20 text-white transition-all hover:bg-[#c9a227]/15 hover:border-[#c9a227]/50 hover:text-[#c9a227] active:scale-95"
           >
             <ChevronLeft className="size-5" />
           </Link>
@@ -27,7 +27,7 @@ export default function BookingProgress({ currentStep }: { currentStep: number }
           <button
             onClick={back}
             aria-label="Voltar ao passo anterior"
-            className="flex size-11 shrink-0 items-center justify-center border border-white/25 text-white/80 transition-all hover:border-[#c9a227]/60 hover:text-[#c9a227]"
+            className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/10 border border-white/20 text-white transition-all hover:bg-[#c9a227]/15 hover:border-[#c9a227]/50 hover:text-[#c9a227] active:scale-95"
           >
             <ChevronLeft className="size-5" />
           </button>
