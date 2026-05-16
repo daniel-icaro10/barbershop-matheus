@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Bell, BellOff, Loader2 } from "lucide-react"
 
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4)
@@ -12,14 +12,23 @@ function urlBase64ToUint8Array(base64String: string) {
   return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)))
 }
 
-type Status = "idle" | "loading" | "subscribed" | "denied" | "unsupported"
+// Wraps a promise with a timeout that rejects after `ms` milliseconds
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("timeout")), ms)
+    ),
+  ])
+}
+
+type Status = "idle" | "loading" | "subscribed" | "denied" | "unsupported" | "error"
 
 export function PushButton() {
   const [status, setStatus] = useState<Status>("idle")
 
   useEffect(() => {
-    // Only relevant inside a PWA (standalone mode)
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !VAPID_PUBLIC_KEY) {
       setStatus("unsupported")
       return
     }
@@ -28,36 +37,45 @@ export function PushButton() {
     navigator.serviceWorker.ready.then(async (reg) => {
       const sub = await reg.pushManager.getSubscription()
       if (sub) setStatus("subscribed")
-    })
+    }).catch(() => {})
   }, [])
 
-  if (status === "unsupported") return null // hidden on browser without SW / push support
+  if (status === "unsupported") return null
 
   const subscribe = async () => {
     if (status === "loading") return
     setStatus("loading")
     try {
-      const reg = await navigator.serviceWorker.ready
+      // Timeout de 10s para evitar spinner eterno se SW travar
+      const reg = await withTimeout(navigator.serviceWorker.ready, 10_000)
+
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY!),
       })
+
       const json = sub.toJSON() as { endpoint: string; keys: { p256dh: string; auth: string } }
-      await fetch("/api/push/subscribe", {
+      const res = await fetch("/api/push/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(json),
       })
+
+      if (!res.ok) throw new Error("server")
       setStatus("subscribed")
     } catch {
-      setStatus(Notification.permission === "denied" ? "denied" : "idle")
+      if (Notification.permission === "denied") {
+        setStatus("denied")
+      } else {
+        setStatus("idle")
+      }
     }
   }
 
   const unsubscribe = async () => {
     setStatus("loading")
     try {
-      const reg = await navigator.serviceWorker.ready
+      const reg = await withTimeout(navigator.serviceWorker.ready, 10_000)
       const sub = await reg.pushManager.getSubscription()
       if (sub) {
         await fetch("/api/push/subscribe", {

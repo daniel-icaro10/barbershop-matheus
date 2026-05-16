@@ -53,19 +53,21 @@ export default async function MinhaContaPage() {
 
   return (
     <div className="min-h-dvh bg-[#080808] text-white">
-      <div className="mx-auto max-w-lg px-5 pb-20 pt-6">
-
-        {/* ── Header ── */}
-        <div className="mb-8 flex items-center justify-between">
+      {/* ── Header sticky com safe area ── */}
+      <header className="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur-xl border-b border-white/[0.06]">
+        <div className="safe-top flex min-h-14 items-center justify-between px-5">
           <Link
             href="/"
             aria-label="Voltar ao início"
-            className="flex size-11 items-center justify-center rounded-xl bg-white/10 border border-white/20 text-white transition-all hover:bg-[#c9a227]/15 hover:border-[#c9a227]/50 hover:text-[#c9a227] active:scale-95"
+            className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/10 border border-white/20 text-white transition-all hover:bg-[#c9a227]/15 hover:border-[#c9a227]/50 hover:text-[#c9a227] active:scale-95"
           >
             <ArrowLeft className="size-5" />
           </Link>
           <LogoutButton />
         </div>
+      </header>
+
+      <div className="mx-auto max-w-lg px-5 pb-20 pt-6">
 
         {/* ── User greeting ── */}
         <div className="mb-8 flex items-center gap-4">
