@@ -31,16 +31,19 @@ function slotToDate(date: Date, slot: string): Date {
   return fromZonedTime(zoned, TIMEZONE)
 }
 
-// Generate 30-min interval start times between openTime and closeTime
-function generateSlots(openTime: string, closeTime: string): string[] {
+// Generate slot start times aligned to the service duration.
+// Step = durationInMinutes so a 45-min service yields 09:00, 09:45, 10:30…
+// and a 60-min service yields 09:00, 10:00, 11:00…
+function generateSlots(openTime: string, closeTime: string, durationInMinutes: number): string[] {
   const [oh, om] = openTime.split(":").map(Number)
   const [ch, cm] = closeTime.split(":").map(Number)
   let cur = oh * 60 + om
   const end = ch * 60 + cm
+  const step = Math.max(durationInMinutes, 15) // never coarser than 15 min
   const slots: string[] = []
   while (cur < end) {
     slots.push(`${String(Math.floor(cur / 60)).padStart(2, "0")}:${String(cur % 60).padStart(2, "0")}`)
-    cur += 30
+    cur += step
   }
   return slots
 }
@@ -81,7 +84,7 @@ export async function getAvailableSlots(params: GetAvailableSlotsParams): Promis
 
   const openTime = workingHours?.openTime ?? DEFAULT_OPEN
   const closeTime = workingHours?.closeTime ?? DEFAULT_CLOSE
-  const allSlots = generateSlots(openTime, closeTime)
+  const allSlots = generateSlots(openTime, closeTime, durationInMinutes)
 
   const closeDate = slotToDate(date, closeTime)
   const now = new Date()
