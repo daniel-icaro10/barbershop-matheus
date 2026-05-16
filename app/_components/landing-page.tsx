@@ -731,9 +731,6 @@ export function LandingPage({
         const wazeUrl = barbershop?.latitude && barbershop?.longitude
           ? `https://waze.com/ul?ll=${barbershop.latitude},${barbershop.longitude}&navigate=yes`
           : null
-        const embedUrl = barbershop?.latitude && barbershop?.longitude
-          ? `https://maps.google.com/maps?q=${barbershop.latitude},${barbershop.longitude}&z=16&output=embed`
-          : null
 
         return (
           <section className="px-5 py-20">
@@ -749,23 +746,53 @@ export function LandingPage({
                 </h2>
               </FadeUp>
 
-              {/* Map iframe */}
-              {embedUrl && (
-                <FadeUp delay={0.06}>
-                  <div className="relative mb-6 overflow-hidden border border-white/[0.07]" style={{ height: 260 }}>
-                    <div className="absolute inset-0 bg-[#060504]/20 z-10 pointer-events-none" />
-                    <iframe
-                      src={embedUrl}
-                      width="100%"
-                      height="100%"
-                      style={{ border: 0, filter: "invert(90%) hue-rotate(180deg) saturate(0.8) brightness(0.9)" }}
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                      title="Localização Matheus Barbeiro"
-                    />
+              {/* Map visual card — CSS only, no iframe, no CSP issues */}
+              <FadeUp delay={0.06}>
+                <div
+                  className="relative mb-6 overflow-hidden border border-white/[0.07]"
+                  style={{ height: 240 }}
+                >
+                  {/* Grid lines simulating map tiles */}
+                  <div
+                    className="absolute inset-0 bg-[#0a0a0a]"
+                    style={{
+                      backgroundImage: [
+                        "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)",
+                        "linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
+                      ].join(", "),
+                      backgroundSize: "40px 40px",
+                    }}
+                  />
+                  {/* Radial highlight under pin */}
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(201,162,39,0.08),transparent_65%)]" />
+                  {/* Roads — horizontal */}
+                  <div className="absolute left-0 right-0 top-[42%] h-[2px] bg-white/[0.06]" />
+                  <div className="absolute left-0 right-0 top-[68%] h-px bg-white/[0.04]" />
+                  <div className="absolute left-0 right-0 top-[22%] h-px bg-white/[0.03]" />
+                  {/* Roads — vertical */}
+                  <div className="absolute bottom-0 top-0 left-[30%] w-[2px] bg-white/[0.06]" />
+                  <div className="absolute bottom-0 top-0 left-[65%] w-px bg-white/[0.04]" />
+                  {/* Center pin */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                    <div className="flex size-10 items-center justify-center border border-[#c9a227]/40 bg-[#c9a227]/[0.12] shadow-[0_0_24px_rgba(201,162,39,0.2)]">
+                      <MapPin className="size-5 text-[#c9a227]" />
+                    </div>
+                    <span className="border border-white/[0.07] bg-[#060504]/80 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.28em] text-white/50 backdrop-blur-sm">
+                      Matheus Barbeiro
+                    </span>
                   </div>
-                </FadeUp>
-              )}
+                  {/* Tap to open — full overlay link */}
+                  {mapsUrl && (
+                    <a
+                      href={mapsUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="absolute inset-0 z-10"
+                      aria-label="Abrir no Google Maps"
+                    />
+                  )}
+                </div>
+              </FadeUp>
 
               {/* Address + action buttons */}
               <FadeUp delay={0.12}>
