@@ -17,14 +17,23 @@ import StepConfirmation from "./step-confirmation"
 
 const DRAFT_KEY = "booking-draft-pending"
 
+interface LocationData {
+  address: string
+  latitude: number | null
+  longitude: number | null
+  googleMapsUrl: string | null
+}
+
 export default function BookingFlow({
   services,
   whatsappPhone,
   initialService = null,
+  location = null,
 }: {
   services: BarbershopItem[]
   whatsappPhone: string
   initialService?: BarbershopItem | null
+  location?: LocationData | null
 }) {
   const store = useBookingStore()
   const { data: session } = authClient.useSession()
@@ -124,10 +133,10 @@ export default function BookingFlow({
         onGoogleLogin={handleGoogleLogin}
         onBookingCreate={handleCreateBooking}
       />,
-      <StepConfirmation key="confirmation" whatsappPhone={whatsappPhone} />,
+      <StepConfirmation key="confirmation" whatsappPhone={whatsappPhone} location={location} />,
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [services, isLoggedIn, handleGoogleLogin, handleCreateBooking, whatsappPhone],
+    [services, isLoggedIn, handleGoogleLogin, handleCreateBooking, whatsappPhone, location],
   )
 
   const pageVariants = {

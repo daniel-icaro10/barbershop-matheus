@@ -17,6 +17,9 @@ import {
   User,
   LayoutDashboard,
   LogOut,
+  MapPin,
+  Navigation,
+  Map,
 } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 
@@ -36,6 +39,9 @@ type BarbershopData = {
   address: string
   description: string
   phones: string[]
+  latitude?: number | null
+  longitude?: number | null
+  googleMapsUrl?: string | null
 } | null
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
@@ -716,7 +722,101 @@ export function LandingPage({
 
       <Divider />
 
-      {/* ── SECTION 3 — CURSO ── */}
+      {/* ── SECTION 3 — LOCALIZAÇÃO ── */}
+      {(barbershop?.address || barbershop?.latitude) && (() => {
+        const mapsUrl = barbershop?.googleMapsUrl
+          ?? (barbershop?.latitude && barbershop?.longitude
+            ? `https://www.google.com/maps/search/?api=1&query=${barbershop.latitude},${barbershop.longitude}`
+            : null)
+        const wazeUrl = barbershop?.latitude && barbershop?.longitude
+          ? `https://waze.com/ul?ll=${barbershop.latitude},${barbershop.longitude}&navigate=yes`
+          : null
+        const embedUrl = barbershop?.latitude && barbershop?.longitude
+          ? `https://maps.google.com/maps?q=${barbershop.latitude},${barbershop.longitude}&z=16&output=embed`
+          : null
+
+        return (
+          <section className="px-5 py-20">
+            <div className="mx-auto max-w-2xl">
+              <FadeUp className="mb-8 text-center">
+                <div className="flex items-center justify-center gap-3 mb-3">
+                  <div className="h-px w-7 bg-[#c9a227]" />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.38em] text-[#c9a227]">Onde estamos</span>
+                  <div className="h-px w-7 bg-[#c9a227]" />
+                </div>
+                <h2 className="font-bebas text-white leading-[0.88] mt-1" style={{ fontSize: "clamp(2rem,8vw,3.5rem)" }}>
+                  COMO <span className="text-[#c9a227]">CHEGAR</span>
+                </h2>
+              </FadeUp>
+
+              {/* Map iframe */}
+              {embedUrl && (
+                <FadeUp delay={0.06}>
+                  <div className="relative mb-6 overflow-hidden border border-white/[0.07]" style={{ height: 260 }}>
+                    <div className="absolute inset-0 bg-[#060504]/20 z-10 pointer-events-none" />
+                    <iframe
+                      src={embedUrl}
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0, filter: "invert(90%) hue-rotate(180deg) saturate(0.8) brightness(0.9)" }}
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Localização Matheus Barbeiro"
+                    />
+                  </div>
+                </FadeUp>
+              )}
+
+              {/* Address + action buttons */}
+              <FadeUp delay={0.12}>
+                <div className="border border-white/[0.07] bg-white/[0.03]">
+                  <div className="flex items-start gap-3 border-b border-white/[0.06] p-5">
+                    <MapPin className="mt-0.5 size-4 shrink-0 text-[#c9a227]" />
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30 mb-1">Endereço</p>
+                      <p className="text-sm text-white/70 leading-relaxed">{barbershop.address}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 divide-x divide-white/[0.06]">
+                    {mapsUrl && (
+                      <a
+                        href={mapsUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center justify-center gap-2 py-4 text-xs font-semibold text-white/40 transition-all hover:bg-[#c9a227]/[0.06] hover:text-[#c9a227]"
+                      >
+                        <Map className="size-3.5" />
+                        Google Maps
+                      </a>
+                    )}
+                    {wazeUrl && (
+                      <a
+                        href={wazeUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center justify-center gap-2 py-4 text-xs font-semibold text-white/40 transition-all hover:bg-blue-500/[0.06] hover:text-blue-400"
+                      >
+                        <Navigation className="size-3.5" />
+                        Waze
+                      </a>
+                    )}
+                    {!mapsUrl && !wazeUrl && (
+                      <div className="col-span-2 flex items-center justify-center gap-2 py-4 text-xs text-white/20">
+                        <MapPin className="size-3.5" />
+                        Configure lat/lng no painel admin
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </FadeUp>
+            </div>
+          </section>
+        )
+      })()}
+
+      <Divider />
+
+      {/* ── SECTION 4 — CURSO ── */}
       <section className="px-5 py-20">
         <div className="max-w-2xl mx-auto">
           <FadeUp className="mb-6 text-center">

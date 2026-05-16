@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
+import { after } from "next/server"
 import { prisma } from "@/lib/prisma"
 import type { Prisma } from "@/generated/prisma/client"
 import { createHmac } from "crypto"
+import { sendPushToUser, sendPushToAdmins } from "@/lib/push"
 
 function validateSignature(req: NextRequest, rawBody: string): boolean {
   const secret = process.env.MERCADO_PAGO_WEBHOOK_SECRET
@@ -73,6 +75,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true })
     }
 
+    let customerId: string | null = null
+
     await prisma.$transaction(async (tx) => {
       await tx.payment.update({
         where: { id: payment.id },
@@ -93,6 +97,7 @@ export async function POST(req: NextRequest) {
         })
 
         if (order) {
+          customerId = order.customerId
           const totalPaid = order.payments.reduce((s, p) => s + (p.paidAmountInCents ?? 0), 0)
           if (totalPaid >= order.totalInCents) {
             await tx.order.update({
@@ -103,6 +108,29 @@ export async function POST(req: NextRequest) {
         }
       }
     })
+
+    if (newStatus === "APPROVED") {
+      const paidFormatted = statusResult.paidAmountInCents
+        ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(statusResult.paidAmountInCents / 100)
+        : "PIX"
+
+      after(async () => {
+        await Promise.allSettled([
+          customerId
+            ? sendPushToUser(customerId, {
+                title: "✅ Pagamento confirmado!",
+                body: `Seu PIX de ${paidFormatted} foi aprovado.`,
+                url: "/minha-conta",
+              })
+            : Promise.resolve(),
+          sendPushToAdmins({
+            title: "💰 PIX aprovado",
+            body: `Pagamento de ${paidFormatted} confirmado.`,
+            url: `/admin/comandas/${payment.orderId}`,
+          }),
+        ])
+      })
+    }
 
     return NextResponse.json({ received: true })
   } catch (err) {

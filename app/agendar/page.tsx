@@ -18,7 +18,7 @@ export default async function AgendarPage({ searchParams }: Props) {
     }),
     prisma.barbershop.findUnique({
       where: { id: DEFAULT_BARBERSHOP_ID },
-      select: { phones: true },
+      select: { phones: true, address: true, latitude: true, longitude: true, googleMapsUrl: true },
     }),
   ])
 
@@ -26,5 +26,12 @@ export default async function AgendarPage({ searchParams }: Props) {
   const whatsappPhone = rawPhone.startsWith("55") ? rawPhone : `55${rawPhone}`
   const initialService = serviceId ? services.find((s) => s.id === serviceId) ?? null : null
 
-  return <BookingFlow services={services} whatsappPhone={whatsappPhone} initialService={initialService} />
+  const location = barbershop ? {
+    address: barbershop.address ?? "",
+    latitude: barbershop.latitude ?? null,
+    longitude: barbershop.longitude ?? null,
+    googleMapsUrl: barbershop.googleMapsUrl ?? null,
+  } : null
+
+  return <BookingFlow services={services} whatsappPhone={whatsappPhone} initialService={initialService} location={location} />
 }
