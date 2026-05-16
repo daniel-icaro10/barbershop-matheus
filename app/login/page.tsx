@@ -3,8 +3,9 @@
 import { useState, useTransition } from "react"
 import { authClient } from "@/lib/auth-client"
 import { motion, AnimatePresence } from "framer-motion"
-import { ScissorsIcon, ArrowLeft, Loader2 } from "lucide-react"
+import { ArrowLeft, Loader2 } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -71,9 +72,13 @@ export default function LoginPage() {
           transition={{ duration: 0.4 }}
           className="mb-8 flex flex-col items-center gap-3"
         >
-          <div className="relative flex size-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
-            <ScissorsIcon className="size-7 text-primary" />
-          </div>
+          <Image
+            src="/logo.png"
+            alt="Matheus Barbeiro"
+            width={88}
+            height={88}
+            className="drop-shadow-[0_0_18px_rgba(201,162,39,0.35)]"
+          />
           <div className="text-center">
             <p className="text-xl font-bold">
               <span className="text-primary">Matheus</span>
