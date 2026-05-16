@@ -8,6 +8,7 @@ import { getAvailableSlots } from "@/lib/availability"
 import { returnValidationErrors } from "next-safe-action"
 import { headers } from "next/headers"
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { toZonedTime, formatInTimeZone } from "date-fns-tz"
 import { rateLimit } from "@/lib/rate-limit"
 import { sendPushToUser } from "@/lib/push"
@@ -86,13 +87,18 @@ export const createBooking = actionClient
       revalidatePath("/admin")
       revalidatePath("/admin/agenda")
 
-      // Fire-and-forget push notification (non-blocking)
-      const dateStr = formatInTimeZone(booking.date, "America/Sao_Paulo", "dd/MM/yyyy 'às' HH:mm")
-      sendPushToUser(session.user.id, {
-        title: "Agendamento confirmado ✂️",
-        body: `${service.name} — ${dateStr}`,
-        url: "/minha-conta",
-      }).catch(() => {})
+      // Run push after response — after() keeps the function alive until this completes
+      const bookingSnapshot = booking
+      const serviceSnapshot = service
+      const userId = session.user.id
+      after(async () => {
+        const dateStr = formatInTimeZone(bookingSnapshot.date, "America/Sao_Paulo", "dd/MM/yyyy 'às' HH:mm")
+        await sendPushToUser(userId, {
+          title: "Agendamento confirmado ✂️",
+          body: `${serviceSnapshot.name} — ${dateStr}`,
+          url: "/minha-conta",
+        }).catch(console.error)
+      })
 
       return booking
     } catch (e) {
