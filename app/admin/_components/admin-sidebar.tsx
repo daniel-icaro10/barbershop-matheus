@@ -43,7 +43,7 @@ export function AdminSidebar({ user, open = false, onClose }: AdminSidebarProps)
       )}
     >
       {/* Brand */}
-      <div className="flex h-16 items-center gap-3 border-b border-white/[0.06] px-5">
+      <div className="safe-top flex min-h-14 items-center gap-3 border-b border-white/[0.06] px-5">
         <Image src="/logo.png" alt="Matheus Barbeiro" width={32} height={22} className="opacity-90" />
         <div className="flex-1 leading-tight">
           <p className="font-bebas text-[1.1rem] text-white tracking-wide leading-none">
