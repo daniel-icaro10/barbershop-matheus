@@ -29,22 +29,24 @@ export function AdminShell({ user, children }: AdminShellProps) {
 
       <main className="flex-1 overflow-auto lg:ml-60">
         {/* Mobile top bar */}
-        <div className="flex h-14 items-center gap-3 border-b border-white/[0.06] bg-[#060504]/90 px-4 backdrop-blur-sm lg:hidden">
-          <button
-            onClick={() => setOpen(true)}
-            className="flex size-11 items-center justify-center rounded-xl bg-white/10 border border-white/20 text-white transition-all hover:bg-[#c9a227]/15 hover:border-[#c9a227]/50 hover:text-[#c9a227] active:scale-95"
-            aria-label="Abrir menu"
-          >
-            <Menu className="size-5" />
-          </button>
-          <div className="flex items-center gap-2.5">
-            <Image src="/logo.png" alt="Matheus Barbeiro" width={26} height={18} className="opacity-80" />
-            <p className="font-bebas text-[1rem] text-white tracking-wide">
-              Matheus <span className="text-[#c9a227]">Barbeiro</span>
-              <span className="ml-2 text-[9px] font-bold uppercase tracking-[0.35em] text-white/25">Admin</span>
-            </p>
+        <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#060504]/95 backdrop-blur-xl lg:hidden">
+          <div className="safe-top flex min-h-14 items-center gap-3 px-4">
+            <button
+              onClick={() => setOpen(true)}
+              className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/10 border border-white/20 text-white transition-all hover:bg-[#c9a227]/15 hover:border-[#c9a227]/50 hover:text-[#c9a227] active:scale-95"
+              aria-label="Abrir menu"
+            >
+              <Menu className="size-5" />
+            </button>
+            <div className="flex items-center gap-2.5">
+              <Image src="/logo.png" alt="Matheus Barbeiro" width={26} height={18} className="opacity-80" />
+              <p className="font-bebas text-[1rem] text-white tracking-wide">
+                Matheus <span className="text-[#c9a227]">Barbeiro</span>
+                <span className="ml-2 text-[9px] font-bold uppercase tracking-[0.35em] text-white/25">Admin</span>
+              </p>
+            </div>
           </div>
-        </div>
+        </header>
 
         {children}
       </main>
