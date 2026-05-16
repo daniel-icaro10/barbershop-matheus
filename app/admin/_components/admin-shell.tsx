@@ -32,7 +32,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
         <div className="flex h-14 items-center gap-3 border-b border-white/[0.06] bg-[#060504]/90 px-4 backdrop-blur-sm lg:hidden">
           <button
             onClick={() => setOpen(true)}
-            className="p-2 text-white/40 transition-colors hover:text-white"
+            className="flex size-11 items-center justify-center rounded-xl bg-white/10 border border-white/20 text-white transition-all hover:bg-[#c9a227]/15 hover:border-[#c9a227]/50 hover:text-[#c9a227] active:scale-95"
             aria-label="Abrir menu"
           >
             <Menu className="size-5" />

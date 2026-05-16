@@ -53,7 +53,7 @@ export function AdminSidebar({ user, open = false, onClose }: AdminSidebarProps)
         </div>
         <button
           onClick={onClose}
-          className="p-1.5 text-white/30 transition-colors hover:text-white lg:hidden"
+          className="flex size-9 items-center justify-center rounded-lg bg-white/10 border border-white/20 text-white transition-all hover:bg-[#c9a227]/15 hover:border-[#c9a227]/50 hover:text-[#c9a227] active:scale-95 lg:hidden"
           aria-label="Fechar menu"
         >
           <X className="size-4" />

@@ -59,10 +59,10 @@ export default async function MinhaContaPage() {
         <div className="mb-8 flex items-center justify-between">
           <Link
             href="/"
-            className="flex min-h-[44px] items-center gap-1.5 pr-3 text-sm text-white/40 transition-colors hover:text-white/70"
+            aria-label="Voltar ao início"
+            className="flex size-11 items-center justify-center rounded-xl bg-white/10 border border-white/20 text-white transition-all hover:bg-[#c9a227]/15 hover:border-[#c9a227]/50 hover:text-[#c9a227] active:scale-95"
           >
-            <ArrowLeft className="size-4" />
-            Início
+            <ArrowLeft className="size-5" />
           </Link>
           <LogoutButton />
         </div>
