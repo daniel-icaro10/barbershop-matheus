@@ -5,25 +5,39 @@ import { auth } from "@/lib/auth"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
 import { LandingPage } from "./_components/landing-page"
 import { headers } from "next/headers"
+import { unstable_cache } from "next/cache"
+
+// Dados estáticos cacheados por 60s — evita queries ao banco a cada navegação
+const getStaticData = unstable_cache(
+  async () => {
+    const [barbershop, services] = await Promise.all([
+      prisma.barbershop.findUnique({ where: { id: DEFAULT_BARBERSHOP_ID } }),
+      prisma.barbershopService.findMany({
+        where: { barbershopId: DEFAULT_BARBERSHOP_ID, isActive: true },
+        orderBy: { priceInCents: "asc" },
+      }),
+    ])
+    return { barbershop, services }
+  },
+  ["home-static"],
+  { revalidate: 60 },
+)
 
 export default async function HomePage() {
-  const [barbershop, services, session] = await Promise.all([
-    prisma.barbershop.findUnique({ where: { id: DEFAULT_BARBERSHOP_ID } }),
-    prisma.barbershopService.findMany({
-      where: { barbershopId: DEFAULT_BARBERSHOP_ID, isActive: true },
-      orderBy: { priceInCents: "asc" },
-    }),
-    auth.api.getSession({ headers: await headers() }),
+  const headersData = await headers()
+
+  // Sessão primeiro (necessária para o isAdmin em paralelo)
+  const session = await auth.api.getSession({ headers: headersData })
+
+  // Dados estáticos (cache) + isAdmin em paralelo
+  const [{ barbershop, services }, dbUser] = await Promise.all([
+    getStaticData(),
+    session?.user?.id
+      ? prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } })
+      : Promise.resolve(null),
   ])
 
-  let isAdmin = false
-  if (session?.user) {
-    const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
-    })
-    isAdmin = dbUser?.role === "ADMIN"
-  }
+  const isAdmin = dbUser?.role === "ADMIN"
 
   return <LandingPage barbershop={barbershop} services={services} isAdmin={isAdmin} />
 }
