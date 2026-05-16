@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Bell, BellOff, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
 
@@ -12,17 +13,16 @@ function urlBase64ToUint8Array(base64String: string) {
   return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)))
 }
 
-// Wraps a promise with a timeout that rejects after `ms` milliseconds
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
     promise,
     new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("timeout")), ms)
+      setTimeout(() => reject(new Error(`Timeout após ${ms / 1000}s`)), ms)
     ),
   ])
 }
 
-type Status = "idle" | "loading" | "subscribed" | "denied" | "unsupported" | "error"
+type Status = "idle" | "loading" | "subscribed" | "denied" | "unsupported"
 
 export function PushButton() {
   const [status, setStatus] = useState<Status>("idle")
@@ -46,14 +46,35 @@ export function PushButton() {
     if (status === "loading") return
     setStatus("loading")
     try {
-      // Timeout de 10s para evitar spinner eterno se SW travar
-      const reg = await withTimeout(navigator.serviceWorker.ready, 10_000)
+      // 1. Solicitar permissão explicitamente (obrigatório em alguns iOS)
+      const permission = await Notification.requestPermission()
+      if (permission === "denied") {
+        setStatus("denied")
+        return
+      }
+      if (permission !== "granted") {
+        // Usuário fechou o dialog sem responder
+        setStatus("idle")
+        return
+      }
 
+      // 2. Aguardar SW ficar ativo (max 15s)
+      let reg: ServiceWorkerRegistration
+      try {
+        reg = await withTimeout(navigator.serviceWorker.ready, 15_000)
+      } catch {
+        // SW não ficou pronto — tenta registrar novamente
+        await navigator.serviceWorker.register("/sw.js")
+        reg = await withTimeout(navigator.serviceWorker.ready, 10_000)
+      }
+
+      // 3. Subscrever ao push
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY!),
       })
 
+      // 4. Salvar no servidor
       const json = sub.toJSON() as { endpoint: string; keys: { p256dh: string; auth: string } }
       const res = await fetch("/api/push/subscribe", {
         method: "POST",
@@ -61,14 +82,17 @@ export function PushButton() {
         body: JSON.stringify(json),
       })
 
-      if (!res.ok) throw new Error("server")
-      setStatus("subscribed")
-    } catch {
-      if (Notification.permission === "denied") {
-        setStatus("denied")
-      } else {
-        setStatus("idle")
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body?.error ?? `Erro ${res.status} ao salvar`)
       }
+
+      setStatus("subscribed")
+      toast.success("Notificações ativadas!")
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      toast.error(`Falha: ${msg}`)
+      setStatus(Notification.permission === "denied" ? "denied" : "idle")
     }
   }
 
@@ -86,7 +110,10 @@ export function PushButton() {
         await sub.unsubscribe()
       }
       setStatus("idle")
-    } catch {
+      toast.success("Notificações desativadas.")
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      toast.error(`Falha: ${msg}`)
       setStatus("idle")
     }
   }
