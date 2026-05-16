@@ -1,6 +1,8 @@
 "use client"
 
-import { format } from "date-fns"
+import { formatInTimeZone } from "date-fns-tz"
+
+const TZ = "America/Sao_Paulo"
 import Image from "next/image"
 
 const SLOT_HEIGHT = 64 // px per 30-min block
@@ -154,7 +156,7 @@ export function AgendaTimeline({ bookings, openTime, closeTime }: Props) {
                         )}
                       </div>
                       <span className="truncate text-[10px] text-muted-foreground">
-                        {format(new Date(booking.date), "HH:mm")}
+                        {formatInTimeZone(new Date(booking.date), TZ, "HH:mm")}
                         {" · "}
                         {booking.service.durationInMinutes}min
                       </span>

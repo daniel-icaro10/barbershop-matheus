@@ -13,7 +13,7 @@ export default function BookingProgress({ currentStep }: { currentStep: number }
   const progress = ((currentStep + 1) / TOTAL) * 100
 
   return (
-    <header className="sticky top-0 z-20 bg-[#080808]/95 backdrop-blur-xl border-b border-white/[0.06]">
+    <header className="sticky top-0 z-50 bg-[#080808]/95 backdrop-blur-xl border-b border-white/[0.06]">
       <div className="flex items-center gap-3 px-4 py-3.5">
         {currentStep === 0 ? (
           <Link

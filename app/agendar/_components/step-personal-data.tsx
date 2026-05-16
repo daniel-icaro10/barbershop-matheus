@@ -14,8 +14,31 @@ const STORAGE_KEY = "barbershop-personal-data"
 const formatPrice = (cents: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100)
 
+// ── Phone utils ─────────────────────────────────────────────────────────────
+
+function maskPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 11)
+  if (digits.length <= 2) return digits.length ? `(${digits}` : ""
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`
+  if (digits.length <= 10)
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
+}
+
+function isValidPhone(raw: string): boolean {
+  const digits = raw.replace(/\D/g, "")
+  if (digits.length < 10 || digits.length > 11) return false
+  const ddd = parseInt(digits.slice(0, 2))
+  if (ddd < 11 || ddd > 99) return false
+  // 11 digits: mobile must start with 9
+  if (digits.length === 11 && digits[2] !== "9") return false
+  return true
+}
+
+// ── Premium Input ────────────────────────────────────────────────────────────
+
 function PremiumInput({
-  label, value, onChange, placeholder, type = "text", autoComplete,
+  label, value, onChange, placeholder, type = "text", autoComplete, error,
 }: {
   label: string
   value: string
@@ -23,40 +46,57 @@ function PremiumInput({
   placeholder: string
   type?: string
   autoComplete?: string
+  error?: string
 }) {
   const [focused, setFocused] = useState(false)
   const hasValue = value.length > 0
+  const showError = !!error && !focused && hasValue
 
   return (
-    <div className="relative">
-      <label
-        className={cn(
-          "absolute left-4 z-10 transition-all duration-200 pointer-events-none",
-          focused || hasValue
-            ? "top-2 text-[9px] font-bold uppercase tracking-[0.35em] text-[#c9a227]"
-            : "top-1/2 -translate-y-1/2 text-sm text-white/35"
-        )}
-      >
-        {label}
-      </label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        placeholder={focused ? placeholder : ""}
-        autoComplete={autoComplete}
-        className={cn(
-          "w-full border bg-white/[0.03] px-4 pb-3 pt-7 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/25",
-          focused
-            ? "border-[#c9a227]/50 shadow-[0_0_0_3px_rgba(201,162,39,0.08)]"
-            : "border-white/[0.07] hover:border-white/[0.12]"
-        )}
-      />
+    <div className="relative flex flex-col gap-1">
+      <div className="relative">
+        <label
+          className={cn(
+            "absolute left-4 z-10 transition-all duration-200 pointer-events-none",
+            focused || hasValue
+              ? "top-2 text-[9px] font-bold uppercase tracking-[0.35em]"
+              : "top-1/2 -translate-y-1/2 text-sm text-white/35",
+            focused || hasValue
+              ? showError ? "text-red-400" : "text-[#c9a227]"
+              : "text-white/35"
+          )}
+        >
+          {label}
+        </label>
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          placeholder={focused ? placeholder : ""}
+          autoComplete={autoComplete}
+          inputMode={type === "tel" ? "numeric" : undefined}
+          className={cn(
+            "w-full border bg-white/[0.03] px-4 pb-3 pt-7 text-sm text-white outline-none transition-all duration-200 placeholder:text-white/25",
+            focused
+              ? showError
+                ? "border-red-400/50 shadow-[0_0_0_3px_rgba(248,113,113,0.08)]"
+                : "border-[#c9a227]/50 shadow-[0_0_0_3px_rgba(201,162,39,0.08)]"
+              : showError
+                ? "border-red-400/30"
+                : "border-white/[0.07] hover:border-white/[0.12]"
+          )}
+        />
+      </div>
+      {showError && (
+        <p className="px-1 text-[10px] text-red-400">{error}</p>
+      )}
     </div>
   )
 }
+
+// ── Main component ───────────────────────────────────────────────────────────
 
 export default function StepPersonalData() {
   const { personalData, service, date, time, setPersonalData, next } = useBookingStore()
@@ -65,10 +105,11 @@ export default function StepPersonalData() {
   const [name, setName] = useState(personalData?.name ?? "")
   const [phone, setPhone] = useState(personalData?.phone ?? "")
   const [notes, setNotes] = useState(personalData?.notes ?? "")
+  const [phoneTouched, setPhoneTouched] = useState(false)
 
   // Pre-fill from session (name) and localStorage (phone) on first render
   useEffect(() => {
-    if (personalData) return // already filled from a previous step visit
+    if (personalData) return
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}")
       if (session?.user.name && !name) setName(session.user.name)
@@ -76,10 +117,19 @@ export default function StepPersonalData() {
     } catch {
       if (session?.user.name && !name) setName(session.user.name)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session])
 
-  const isValid = name.trim().length >= 2 && phone.trim().length >= 8
+  const handlePhoneChange = (raw: string) => {
+    setPhone(maskPhone(raw))
+    if (!phoneTouched) setPhoneTouched(true)
+  }
+
+  const phoneError = phoneTouched && phone.length > 0 && !isValidPhone(phone)
+    ? "Número inválido. Ex: (81) 99999-9999"
+    : undefined
+
+  const isValid = name.trim().length >= 2 && isValidPhone(phone)
 
   const handleContinue = () => {
     const data = { name: name.trim(), phone: phone.trim(), notes: notes.trim() }
@@ -142,9 +192,28 @@ export default function StepPersonalData() {
         transition={{ delay: 0.1, duration: 0.4 }}
         className="flex flex-col gap-2.5"
       >
-        <PremiumInput label="Nome completo" value={name} onChange={setName} placeholder="Seu nome" autoComplete="name" />
-        <PremiumInput label="Telefone / WhatsApp" value={phone} onChange={setPhone} placeholder="(11) 99999-9999" type="tel" autoComplete="tel" />
-        <PremiumInput label="Observações (opcional)" value={notes} onChange={setNotes} placeholder="Ex: prefiro degradê curto nas laterais" />
+        <PremiumInput
+          label="Nome completo"
+          value={name}
+          onChange={setName}
+          placeholder="Seu nome"
+          autoComplete="name"
+        />
+        <PremiumInput
+          label="Telefone / WhatsApp"
+          value={phone}
+          onChange={handlePhoneChange}
+          placeholder="(81) 99999-9999"
+          type="tel"
+          autoComplete="tel"
+          error={phoneError}
+        />
+        <PremiumInput
+          label="Observações (opcional)"
+          value={notes}
+          onChange={setNotes}
+          placeholder="Ex: prefiro degradê curto nas laterais"
+        />
       </motion.div>
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.18 }}>

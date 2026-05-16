@@ -232,6 +232,12 @@
     @apply border-border outline-ring/50;
     scrollbar-width: thin;
     scrollbar-color: oklch(0.28 0 0) transparent;
+    /* Remove flash cinza ao tocar no iOS */
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* Elimina o delay de 300ms do iOS em todos os elementos clicáveis */
+  button, a, [role="button"], input, select, textarea, label {
+    touch-action: manipulation;
   }
   body {
     @apply bg-background text-foreground;
@@ -275,8 +281,15 @@
 .rdp-root {
   --rdp-accent-color: oklch(0.78 0.16 78);
   --rdp-accent-background-color: oklch(0.78 0.16 78 / 0.12);
-  --rdp-day-height: 2.25rem;
-  --rdp-day-width:  2.25rem;
+  /* Mobile: 44px mínimo iOS / Desktop: 36px */
+  --rdp-day-height: 2.75rem;
+  --rdp-day-width:  2.75rem;
+}
+@media (min-width: 768px) {
+  .rdp-root {
+    --rdp-day-height: 2.25rem;
+    --rdp-day-width:  2.25rem;
+  }
 }
 
 .rdp-day_button:hover:not([disabled]) {

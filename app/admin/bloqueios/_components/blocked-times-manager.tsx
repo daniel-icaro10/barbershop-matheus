@@ -4,8 +4,10 @@ import { useState, useTransition } from "react"
 import { createBlockedTime } from "@/app/_actions/admin/create-blocked-time"
 import { deleteBlockedTime } from "@/app/_actions/admin/delete-blocked-time"
 import { toast } from "sonner"
-import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import { formatInTimeZone } from "date-fns-tz"
+
+const TZ = "America/Sao_Paulo"
 import { Trash2, Plus, Ban } from "lucide-react"
 
 interface BlockedEntry {
@@ -165,9 +167,9 @@ export function BlockedTimesManager({ initial }: Props) {
                     {item.reason ?? "Indisponibilidade"}
                   </p>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    {format(new Date(item.startDate), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                    {formatInTimeZone(new Date(item.startDate), TZ, "dd/MM/yyyy HH:mm", { locale: ptBR })}
                     {" → "}
-                    {format(new Date(item.endDate), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                    {formatInTimeZone(new Date(item.endDate), TZ, "dd/MM/yyyy HH:mm", { locale: ptBR })}
                   </p>
                 </div>
                 <button

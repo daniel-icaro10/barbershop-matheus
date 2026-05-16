@@ -488,8 +488,8 @@ export function LandingPage({
     <div className="bg-[#080808] text-white overflow-x-hidden selection:bg-[#c9a227]/25">
 
       {/* ── NAVBAR ── */}
-      <header className="fixed inset-x-0 top-0 z-50 pointer-events-none">
-        <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-b from-black/75 via-black/30 to-transparent pointer-events-auto">
+      <header className="fixed inset-x-0 top-0 z-50">
+        <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-b from-black/75 via-black/30 to-transparent">
           <Link href="/" className="shrink-0">
             <Image
               src="/logo.png"

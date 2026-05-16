@@ -2,8 +2,10 @@ export const dynamic = "force-dynamic"
 
 import { prisma } from "@/lib/prisma"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
-import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import { formatInTimeZone } from "date-fns-tz"
+
+const TZ = "America/Sao_Paulo"
 import Image from "next/image"
 import { Users } from "lucide-react"
 
@@ -95,7 +97,7 @@ export default async function ClientesPage() {
                     </div>
                   </div>
                   <p className="text-sm text-white/35 capitalize">
-                    {format(client.lastVisit, "dd 'de' MMM, yyyy", { locale: ptBR })}
+                    {formatInTimeZone(client.lastVisit, TZ, "dd 'de' MMM, yyyy", { locale: ptBR })}
                   </p>
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm font-bold text-white/80">{client.visits}</span>
@@ -145,7 +147,7 @@ export default async function ClientesPage() {
                   <div>
                     <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-white/25 mb-0.5">Última visita</p>
                     <p className="text-sm text-white/50 capitalize">
-                      {format(client.lastVisit, "dd 'de' MMM, yyyy", { locale: ptBR })}
+                      {formatInTimeZone(client.lastVisit, TZ, "dd 'de' MMM, yyyy", { locale: ptBR })}
                     </p>
                   </div>
                 </div>
