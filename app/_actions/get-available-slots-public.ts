@@ -14,7 +14,7 @@ const inputSchema = z.object({
 export const getAvailableSlotsPublic = actionClient
   .inputSchema(inputSchema)
   .action(async ({ parsedInput: { date, serviceId } }) => {
-    const service = await prisma.barbershopService.findUnique({
+    const service = await prisma.barbershopItem.findUnique({
       where: { id: serviceId },
       select: { durationInMinutes: true },
     })

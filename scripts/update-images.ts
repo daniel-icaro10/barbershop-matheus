@@ -7,14 +7,14 @@ const prisma = new PrismaClient({ adapter })
 
 async function main() {
   // Update ALL "Barba" services
-  const barba = await prisma.barbershopService.updateMany({
+  const barba = await prisma.barbershopItem.updateMany({
     where: { name: { contains: "Barba", mode: "insensitive" } },
     data: { imageUrl: "/barba.jpg" },
   })
   console.log(`✓ Barba: ${barba.count} registros atualizados → /barba.jpg`)
 
   // Update ALL "Corte de Cabelo" services
-  const corte = await prisma.barbershopService.updateMany({
+  const corte = await prisma.barbershopItem.updateMany({
     where: {
       OR: [
         { name: { contains: "Corte", mode: "insensitive" } },

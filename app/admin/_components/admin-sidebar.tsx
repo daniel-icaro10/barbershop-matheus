@@ -4,7 +4,8 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
-  LayoutDashboard, Calendar, Users, Clock, Ban, ScissorsIcon, LogOut, X,
+  LayoutDashboard, Calendar, Users, Clock, Ban, Package, LogOut, X,
+  ShoppingBag, Vault, MapPin, Star,
 } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
@@ -13,10 +14,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/app/_components/ui/avatar
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/agenda", label: "Agenda", icon: Calendar },
-  { href: "/admin/servicos", label: "Serviços", icon: ScissorsIcon },
+  { href: "/admin/comandas", label: "Comandas", icon: ShoppingBag },
+  { href: "/admin/itens", label: "Itens & Produtos", icon: Package },
+  { href: "/admin/caixa", label: "Caixa", icon: Vault },
   { href: "/admin/clientes", label: "Clientes", icon: Users },
+  { href: "/admin/avaliacoes", label: "Avaliações", icon: Star },
   { href: "/admin/horarios", label: "Horários", icon: Clock },
   { href: "/admin/bloqueios", label: "Bloqueios", icon: Ban },
+  { href: "/admin/localizacao", label: "Localização", icon: MapPin },
 ]
 
 interface AdminSidebarProps {

@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import type { BarbershopService } from "@/generated/prisma/client"
+import type { BarbershopItem } from "@/generated/prisma/client"
 
 export interface PersonalData {
   name: string
@@ -12,14 +12,14 @@ export type Step = 0 | 1 | 2 | 3 | 4
 
 interface BookingStore {
   step: Step
-  service: BarbershopService | null
+  service: BarbershopItem | null
   date: Date | null
   time: string | null
   personalData: PersonalData | null
   bookingId: string | null
 
   setStep: (step: Step) => void
-  setService: (service: BarbershopService) => void
+  setService: (service: BarbershopItem) => void
   setDate: (date: Date | null) => void
   setTime: (time: string | null) => void
   setPersonalData: (data: PersonalData) => void

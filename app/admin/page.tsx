@@ -84,7 +84,7 @@ export default async function AdminDashboard() {
 
   // Service names for top services
   const serviceIds = topServices.map((s) => s.serviceId)
-  const serviceNames = await prisma.barbershopService.findMany({
+  const serviceNames = await prisma.barbershopItem.findMany({
     where: { id: { in: serviceIds } },
     select: { id: true, name: true, priceInCents: true },
   })

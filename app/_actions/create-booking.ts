@@ -34,7 +34,7 @@ export const createBooking = actionClient
       return returnValidationErrors(inputSchema, { _errors: ["Muitas tentativas. Aguarde um momento."] })
     }
 
-    const service = await prisma.barbershopService.findUnique({
+    const service = await prisma.barbershopItem.findUnique({
       where: { id: serviceId },
     })
     if (!service) {

@@ -17,7 +17,7 @@ const inputSchema = z.object({
 export const updateService = adminActionClient
   .inputSchema(inputSchema)
   .action(async ({ parsedInput }) => {
-    await prisma.barbershopService.update({
+    await prisma.barbershopItem.update({
       where: { id: parsedInput.id },
       data: {
         name: parsedInput.name,
@@ -27,7 +27,7 @@ export const updateService = adminActionClient
         isActive: parsedInput.isActive,
       },
     })
-    revalidatePath("/admin/servicos")
+    revalidatePath("/admin/itens")
     revalidatePath("/agendar")
     return { success: true }
   })

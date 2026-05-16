@@ -1,7 +1,7 @@
 "use client"
 
 import { useBookingStore } from "@/lib/store/booking-store"
-import type { BarbershopService } from "@/generated/prisma/client"
+import type { BarbershopItem } from "@/generated/prisma/client"
 import { motion } from "framer-motion"
 import { Clock } from "lucide-react"
 import Image from "next/image"
@@ -21,11 +21,11 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } },
 }
 
-export default function StepService({ services }: { services: BarbershopService[] }) {
+export default function StepService({ services }: { services: BarbershopItem[] }) {
   const { setService, next } = useBookingStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  const handleSelect = (service: BarbershopService) => {
+  const handleSelect = (service: BarbershopItem) => {
     setSelectedId(service.id)
     setService(service)
     setTimeout(next, 220)
@@ -67,7 +67,7 @@ export default function StepService({ services }: { services: BarbershopService[
             {/* Image */}
             <div className="relative size-[68px] shrink-0 overflow-hidden">
               <Image
-                src={service.imageUrl}
+                src={service.imageUrl ?? ""}
                 alt={service.name}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-110"

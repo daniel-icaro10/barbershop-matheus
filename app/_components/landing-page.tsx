@@ -26,7 +26,7 @@ type ServiceData = {
   id: string
   name: string
   description: string | null
-  imageUrl: string
+  imageUrl: string | null
   priceInCents: number
   durationInMinutes: number
 }
@@ -639,7 +639,7 @@ export function LandingPage({
                 <Link href={`/agendar?serviceId=${service.id}`} className="group block">
                   <div className="relative overflow-hidden aspect-[3/4] bg-[#111]">
                     <Image
-                      src={service.imageUrl}
+                      src={service.imageUrl ?? ""}
                       alt={service.name}
                       fill
                       sizes="(max-width: 768px) 50vw, 25vw"

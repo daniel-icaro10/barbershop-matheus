@@ -1,12 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider   = "prisma-client"
+  output     = "../generated/prisma"
   engineType = "binary"
 }
 
@@ -14,62 +8,232 @@ datasource db {
   provider = "postgresql"
 }
 
-model Barbershop {
-  id           String              @id @default(uuid())
-  name         String
-  address      String
-  description  String
-  imageUrl     String
-  phones       String[]
-  services     BarbershopService[]
-  bookings     Booking[]
-  workingHours WorkingHours[]
-  blockedTimes BlockedTime[]
+// ─── Enums ─────────────────────────────────────────────────────────────────
+
+enum ItemType {
+  SERVICE
+  PRODUCT
 }
 
-model BarbershopService {
-  id                String     @id @default(uuid())
-  name              String
-  description       String
-  imageUrl          String
+enum CommissionType {
+  PERCENTAGE
+  FIXED
+}
+
+enum OrderStatus {
+  OPEN
+  CLOSED
+  CANCELED
+}
+
+enum PaymentProvider {
+  MERCADO_PAGO
+  MANUAL
+}
+
+enum PaymentMethod {
+  PIX
+  CREDIT_CARD
+  CASH
+  DEBIT_CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REFUNDED
+  CANCELED
+}
+
+// ─── Models ────────────────────────────────────────────────────────────────
+
+model Barbershop {
+  id            String           @id @default(uuid())
+  name          String
+  address       String
+  description   String
+  imageUrl      String
+  phones        String[]
+  latitude      Float?
+  longitude     Float?
+  googleMapsUrl String?
+
+  items         BarbershopItem[]
+  bookings      Booking[]
+  workingHours  WorkingHours[]
+  blockedTimes  BlockedTime[]
+  orders        Order[]
+  cashRegisters CashRegister[]
+  reviews       Review[]
+}
+
+model BarbershopItem {
+  id                String          @id @default(uuid())
   barbershopId      String
-  barbershop        Barbershop @relation(fields: [barbershopId], references: [id])
+  barbershop        Barbershop      @relation(fields: [barbershopId], references: [id])
+  name              String
+  description       String?
+  imageUrl          String?
+  type              ItemType        @default(SERVICE)
   priceInCents      Int
-  durationInMinutes Int        @default(30)
-  isActive          Boolean    @default(true)
-  bookings          Booking[]
+  costInCents       Int?
+  durationInMinutes Int             @default(30)
+  stockQuantity     Int?
+  minimumStock      Int?
+  commissionType    CommissionType?
+  commissionValue   Int?
+  isActive          Boolean         @default(true)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @default(now()) @updatedAt
+
+  bookings   Booking[]
+  orderItems OrderItem[]
+
+  @@index([barbershopId, type, isActive])
+  @@index([barbershopId, isActive])
+  @@map("BarbershopService")
 }
 
 model Booking {
-  id             String            @id @default(uuid())
-  serviceId      String
-  service        BarbershopService @relation(fields: [serviceId], references: [id])
-  barbershopId   String
-  barbershop     Barbershop        @relation(fields: [barbershopId], references: [id])
-  userId         String
-  user           User              @relation(fields: [userId], references: [id])
-  date           DateTime          @db.Timestamptz
-  endDate        DateTime?         @db.Timestamptz
-  cancelled      Boolean           @default(false)
-  cancelledAt    DateTime?         @db.Timestamptz
+  id           String         @id @default(uuid())
+  serviceId    String
+  service      BarbershopItem @relation(fields: [serviceId], references: [id])
+  barbershopId String
+  barbershop   Barbershop     @relation(fields: [barbershopId], references: [id])
+  userId       String
+  user         User           @relation(fields: [userId], references: [id])
+  date         DateTime       @db.Timestamptz
+  endDate      DateTime?      @db.Timestamptz
+  cancelled    Boolean        @default(false)
+  cancelledAt  DateTime?      @db.Timestamptz
+
+  order  Order?
+  review Review?
 
   @@index([barbershopId, date])
   @@index([userId])
 }
 
+model Order {
+  id              String      @id @default(uuid())
+  barbershopId    String
+  barbershop      Barbershop  @relation(fields: [barbershopId], references: [id])
+  bookingId       String?     @unique
+  booking         Booking?    @relation(fields: [bookingId], references: [id])
+  customerId      String
+  customer        User        @relation("CustomerOrders", fields: [customerId], references: [id])
+  status          OrderStatus @default(OPEN)
+  subtotalInCents Int         @default(0)
+  discountInCents Int         @default(0)
+  totalInCents    Int         @default(0)
+  notes           String?
+  createdAt       DateTime    @default(now())
+  closedAt        DateTime?   @db.Timestamptz
+
+  items    OrderItem[]
+  payments Payment[]
+
+  @@index([barbershopId, status])
+  @@index([barbershopId, createdAt])
+  @@index([customerId])
+}
+
+model OrderItem {
+  id                 String         @id @default(uuid())
+  orderId            String
+  order              Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  itemId             String
+  item               BarbershopItem @relation(fields: [itemId], references: [id])
+  itemType           ItemType
+  quantity           Int            @default(1)
+  unitPriceInCents   Int
+  professionalId     String?
+  professional       User?          @relation("ProfessionalOrderItems", fields: [professionalId], references: [id])
+  commissionSnapshot Json?
+  totalInCents       Int
+
+  @@index([orderId])
+  @@index([itemId])
+}
+
+model Payment {
+  id                       String          @id @default(uuid())
+  orderId                  String
+  order                    Order           @relation(fields: [orderId], references: [id])
+  provider                 PaymentProvider
+  method                   PaymentMethod
+  status                   PaymentStatus   @default(PENDING)
+  externalPaymentId        String?         @unique
+  qrCode                   String?         @db.Text
+  qrCodeBase64             String?         @db.Text
+  pixCopyPaste             String?         @db.Text
+  transactionAmountInCents Int
+  paidAmountInCents        Int?
+  metadata                 Json?
+  webhookRaw               Json?
+  createdAt                DateTime        @default(now())
+  paidAt                   DateTime?       @db.Timestamptz
+
+  @@index([orderId])
+  @@index([externalPaymentId])
+  @@index([status, provider])
+}
+
+model CashRegister {
+  id                   String     @id @default(uuid())
+  barbershopId         String
+  barbershop           Barbershop @relation(fields: [barbershopId], references: [id])
+  openedAt             DateTime   @default(now()) @db.Timestamptz
+  closedAt             DateTime?  @db.Timestamptz
+  initialAmountInCents Int
+  finalAmountInCents   Int?
+  differenceInCents    Int?
+  openedById           String
+  openedBy             User       @relation("CashOpenedBy", fields: [openedById], references: [id])
+  closedById           String?
+  closedBy             User?      @relation("CashClosedBy", fields: [closedById], references: [id])
+  notes                String?
+
+  @@index([barbershopId, openedAt])
+}
+
+model Review {
+  id           String     @id @default(uuid())
+  bookingId    String     @unique
+  booking      Booking    @relation(fields: [bookingId], references: [id])
+  customerId   String
+  customer     User       @relation("CustomerReviews", fields: [customerId], references: [id])
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id])
+  rating       Int
+  comment      String?
+  approved     Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+
+  @@index([barbershopId, approved])
+  @@index([customerId])
+}
+
 model User {
-  id            String    @id
+  id            String   @id
   name          String
   email         String
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean  @default(false)
   image         String?
-  role          String    @default("USER")
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
-  sessions          Session[]
-  accounts          Account[]
-  bookings          Booking[]
-  pushSubscriptions PushSubscription[]
+  role          String   @default("USER")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  sessions               Session[]
+  accounts               Account[]
+  bookings               Booking[]
+  pushSubscriptions      PushSubscription[]
+  orders                 Order[]          @relation("CustomerOrders")
+  reviewsGiven           Review[]         @relation("CustomerReviews")
+  cashRegistersOpened    CashRegister[]   @relation("CashOpenedBy")
+  cashRegistersClosed    CashRegister[]   @relation("CashClosedBy")
+  professionalOrderItems OrderItem[]      @relation("ProfessionalOrderItems")
 
   @@unique([email])
   @@map("user")
@@ -79,9 +243,9 @@ model WorkingHours {
   id           String     @id @default(uuid())
   barbershopId String
   barbershop   Barbershop @relation(fields: [barbershopId], references: [id])
-  dayOfWeek    Int        // 0=Sunday … 6=Saturday
-  openTime     String     // "09:00"
-  closeTime    String     // "19:00"
+  dayOfWeek    Int
+  openTime     String
+  closeTime    String
   isOpen       Boolean    @default(true)
 
   @@unique([barbershopId, dayOfWeek])

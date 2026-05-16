@@ -13,12 +13,12 @@ import { toast } from "sonner"
 import Image from "next/image"
 import { Edit2, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { BarbershopService } from "@/generated/prisma/client"
+import type { BarbershopItem } from "@/generated/prisma/client"
 
 const DURATION_OPTIONS = [15, 20, 30, 45, 60, 90, 120]
 
 interface ServiceEditorProps {
-  service: BarbershopService
+  service: BarbershopItem
 }
 
 export function ServiceEditor({ service }: ServiceEditorProps) {
@@ -90,7 +90,7 @@ export function ServiceEditor({ service }: ServiceEditorProps) {
         {/* Header with service image */}
         <div className="relative h-32 shrink-0 overflow-hidden">
           <Image
-            src={service.imageUrl}
+            src={service.imageUrl ?? ""}
             alt={service.name}
             fill
             className="object-cover"

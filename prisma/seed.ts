@@ -84,7 +84,7 @@ async function main() {
   ]
 
   for (const service of services) {
-    await prisma.barbershopService.upsert({
+    await prisma.barbershopItem.upsert({
       where: { id: service.id },
       update: { ...service },
       create: { ...service, barbershopId: BARBERSHOP_ID, isActive: true },

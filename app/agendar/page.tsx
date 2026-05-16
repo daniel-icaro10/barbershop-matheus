@@ -12,8 +12,8 @@ export default async function AgendarPage({ searchParams }: Props) {
   const { serviceId } = await searchParams
 
   const [services, barbershop] = await Promise.all([
-    prisma.barbershopService.findMany({
-      where: { barbershopId: DEFAULT_BARBERSHOP_ID, isActive: true },
+    prisma.barbershopItem.findMany({
+      where: { barbershopId: DEFAULT_BARBERSHOP_ID, isActive: true, type: "SERVICE" },
       orderBy: { priceInCents: "asc" },
     }),
     prisma.barbershop.findUnique({

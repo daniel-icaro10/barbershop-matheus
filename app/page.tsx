@@ -12,8 +12,8 @@ const getStaticData = unstable_cache(
   async () => {
     const [barbershop, services] = await Promise.all([
       prisma.barbershop.findUnique({ where: { id: DEFAULT_BARBERSHOP_ID } }),
-      prisma.barbershopService.findMany({
-        where: { barbershopId: DEFAULT_BARBERSHOP_ID, isActive: true },
+      prisma.barbershopItem.findMany({
+        where: { barbershopId: DEFAULT_BARBERSHOP_ID, isActive: true, type: "SERVICE" },
         orderBy: { priceInCents: "asc" },
       }),
     ])

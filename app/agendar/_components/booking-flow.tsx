@@ -6,7 +6,7 @@ import { authClient } from "@/lib/auth-client"
 import { useBookingStore } from "@/lib/store/booking-store"
 import { createBooking } from "@/app/_actions/create-booking"
 import { toast } from "sonner"
-import type { BarbershopService } from "@/generated/prisma/client"
+import type { BarbershopItem } from "@/generated/prisma/client"
 
 import BookingProgress from "./booking-progress"
 import StepService from "./step-service"
@@ -22,9 +22,9 @@ export default function BookingFlow({
   whatsappPhone,
   initialService = null,
 }: {
-  services: BarbershopService[]
+  services: BarbershopItem[]
   whatsappPhone: string
-  initialService?: BarbershopService | null
+  initialService?: BarbershopItem | null
 }) {
   const store = useBookingStore()
   const { data: session } = authClient.useSession()
