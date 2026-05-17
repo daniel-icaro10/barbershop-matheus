@@ -3,7 +3,7 @@
 import { adminActionClient } from "@/lib/action-client"
 import { prisma } from "@/lib/prisma"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { z } from "zod"
 
 const inputSchema = z.object({
@@ -35,5 +35,7 @@ export const createItem = adminActionClient
     })
     revalidatePath("/admin/itens")
     revalidatePath("/agendar")
+    revalidatePath("/")
+    revalidateTag("services", "default")
     return { item }
   })

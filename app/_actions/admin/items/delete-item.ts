@@ -2,7 +2,7 @@
 
 import { adminActionClient } from "@/lib/action-client"
 import { prisma } from "@/lib/prisma"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { z } from "zod"
 
 const inputSchema = z.object({
@@ -18,5 +18,7 @@ export const deleteItem = adminActionClient
     })
     revalidatePath("/admin/itens")
     revalidatePath("/agendar")
+    revalidatePath("/")
+    revalidateTag("services", "default")
     return { success: true }
   })

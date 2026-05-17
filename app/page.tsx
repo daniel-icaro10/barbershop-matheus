@@ -7,7 +7,7 @@ import { LandingPage } from "./_components/landing-page"
 import { headers } from "next/headers"
 import { unstable_cache } from "next/cache"
 
-// Dados estáticos cacheados por 60s — evita queries ao banco a cada navegação
+// Dados cacheados e invalidados por tag — revalidateTag("services") nas actions de item
 const getStaticData = unstable_cache(
   async () => {
     const [barbershop, services] = await Promise.all([
@@ -20,7 +20,7 @@ const getStaticData = unstable_cache(
     return { barbershop, services }
   },
   ["home-static"],
-  { revalidate: 60 },
+  { tags: ["services"], revalidate: false },
 )
 
 export default async function HomePage() {
