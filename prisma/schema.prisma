@@ -46,6 +46,11 @@ enum PaymentStatus {
   CANCELED
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
 enum TimelineEventType {
   ORDER_CREATED
   ITEM_ADDED
@@ -253,7 +258,7 @@ model User {
   email         String
   emailVerified Boolean  @default(false)
   image         String?
-  role          String   @default("USER")
+  role          UserRole @default(USER)
   phone         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @default(now()) @updatedAt
