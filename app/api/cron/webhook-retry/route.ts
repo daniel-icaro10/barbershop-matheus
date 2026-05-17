@@ -11,7 +11,11 @@ function backoffMinutes(attempts: number): number {
 
 export async function POST(req: NextRequest) {
   const secret = process.env.CRON_SECRET
-  if (!secret || req.headers.get("x-cron-secret") !== secret) {
+  // Vercel Cron sends Authorization: Bearer <CRON_SECRET> automatically.
+  // x-cron-secret kept for backward compatibility with manual calls.
+  const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? ""
+  const custom = req.headers.get("x-cron-secret") ?? ""
+  if (!secret || (bearer !== secret && custom !== secret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
