@@ -38,6 +38,9 @@ function validateSignature(req: NextRequest): boolean {
   return hmac === v1
 }
 
+const FAILED_STATUSES = ["REJECTED", "CANCELED"] as const
+type FailedStatus = typeof FAILED_STATUSES[number]
+
 export async function POST(req: NextRequest) {
   const rawBody = await req.text()
 
@@ -82,12 +85,15 @@ export async function POST(req: NextRequest) {
       rejected: "REJECTED",
       refunded: "REFUNDED",
       canceled: "CANCELED",
+      expired: "CANCELED",
     }
     const newStatus = statusMap[statusResult.status] ?? null
 
     if (!newStatus || newStatus === payment.status) {
       return NextResponse.json({ received: true })
     }
+
+    const isFailed = (FAILED_STATUSES as readonly string[]).includes(newStatus)
 
     let customerId: string | null = null
 
@@ -121,6 +127,18 @@ export async function POST(req: NextRequest) {
           }
         }
       }
+
+      if (isFailed) {
+        const eventType = newStatus === "REJECTED" ? "PAYMENT_REJECTED" : "PIX_CANCELED"
+        const eventMsg = newStatus === "REJECTED" ? "PIX recusado" : "PIX cancelado/expirado"
+        await tx.orderTimelineEvent.create({ data: { orderId: payment.orderId, type: eventType, message: eventMsg } })
+
+        const order = await tx.order.findUnique({
+          where: { id: payment.orderId },
+          select: { customerId: true },
+        })
+        if (order) customerId = order.customerId
+      }
     })
 
     if (newStatus === "APPROVED") {
@@ -140,6 +158,26 @@ export async function POST(req: NextRequest) {
           sendPushToAdmins({
             title: "💰 PIX aprovado",
             body: `Pagamento de ${paidFormatted} confirmado.`,
+            url: `/admin/comandas/${payment.orderId}`,
+          }),
+        ])
+      })
+    }
+
+    if (isFailed) {
+      const failLabel = (newStatus as FailedStatus) === "REJECTED" ? "recusado" : "cancelado"
+      after(async () => {
+        await Promise.allSettled([
+          customerId
+            ? sendPushToUser(customerId, {
+                title: "⚠️ Pagamento não aprovado",
+                body: `Seu PIX foi ${failLabel}. Acesse o app para tentar novamente ou escolher outro método.`,
+                url: "/minha-conta",
+              })
+            : Promise.resolve(),
+          sendPushToAdmins({
+            title: `PIX ${failLabel}`,
+            body: `Um pagamento PIX foi ${failLabel}.`,
             url: `/admin/comandas/${payment.orderId}`,
           }),
         ])
