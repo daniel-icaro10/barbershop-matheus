@@ -5,9 +5,14 @@ import type { Prisma } from "@/generated/prisma/client"
 import { createHmac } from "crypto"
 import { sendPushToUser, sendPushToAdmins } from "@/lib/push"
 
-function validateSignature(req: NextRequest, rawBody: string): boolean {
+// MP signature algorithm uses headers + query param only, not the raw body.
+// Throws if MERCADO_PAGO_WEBHOOK_SECRET is not configured so the caller
+// receives 500 instead of silently accepting an unauthenticated payload.
+function validateSignature(req: NextRequest): boolean {
   const secret = process.env.MERCADO_PAGO_WEBHOOK_SECRET
-  if (!secret) return true
+  if (!secret) {
+    throw new Error("MERCADO_PAGO_WEBHOOK_SECRET não configurado")
+  }
 
   const xSignature = req.headers.get("x-signature") ?? ""
   const xRequestId = req.headers.get("x-request-id") ?? ""
@@ -36,15 +41,20 @@ function validateSignature(req: NextRequest, rawBody: string): boolean {
 export async function POST(req: NextRequest) {
   const rawBody = await req.text()
 
-  if (!validateSignature(req, rawBody)) {
-    return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
-  }
-
   let body: Record<string, unknown>
   try {
+    // validateSignature is inside try so a missing secret throws → 500
+    if (!validateSignature(req)) {
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
+    }
+
     body = JSON.parse(rawBody)
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
+  } catch (err) {
+    if (err instanceof SyntaxError) {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
+    }
+    console.error("[mercadopago webhook] setup error", err)
+    return NextResponse.json({ error: "Internal error" }, { status: 500 })
   }
 
   const type = body.type as string
