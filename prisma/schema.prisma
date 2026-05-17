@@ -79,6 +79,7 @@ model Barbershop {
 
   items         BarbershopItem[]
   bookings      Booking[]
+  barbers       Barber[]
   workingHours  WorkingHours[]
   blockedTimes  BlockedTime[]
   orders        Order[]
@@ -119,6 +120,8 @@ model Booking {
   service      BarbershopItem @relation(fields: [serviceId], references: [id])
   barbershopId String
   barbershop   Barbershop     @relation(fields: [barbershopId], references: [id])
+  barberId     String?
+  barber       Barber?        @relation(fields: [barberId], references: [id])
   userId       String
   user         User           @relation(fields: [userId], references: [id])
   date         DateTime       @db.Timestamptz
@@ -134,6 +137,7 @@ model Booking {
   // Must exist in Supabase: CREATE UNIQUE INDEX IF NOT EXISTS "booking_active_slot_unique"
   //   ON "Booking" ("barbershopId", "date") WHERE "cancelled" = false;
   @@index([barbershopId, date])
+  @@index([barberId])
   @@index([userId])
   @@index([userId, createdAt])
 }
@@ -357,6 +361,20 @@ model PushSubscription {
 
   @@index([userId])
   @@map("push_subscription")
+}
+
+model Barber {
+  id           String     @id @default(uuid())
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id])
+  name         String
+  photoUrl     String?
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now()) @db.Timestamptz
+
+  bookings Booking[]
+
+  @@index([barbershopId, isActive])
 }
 
 model WebhookRetryQueue {

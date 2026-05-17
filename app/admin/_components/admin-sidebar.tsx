@@ -5,7 +5,7 @@ import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboard, Calendar, Users, Clock, Ban, Package, LogOut, X,
-  ShoppingBag, Vault, MapPin, Star, TrendingUp,
+  ShoppingBag, Vault, MapPin, Star, TrendingUp, Scissors,
 } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
@@ -18,6 +18,7 @@ const navItems = [
   { href: "/admin/comandas", label: "Comandas", icon: ShoppingBag },
   { href: "/admin/itens", label: "Itens & Produtos", icon: Package },
   { href: "/admin/caixa", label: "Caixa", icon: Vault },
+  { href: "/admin/barbeiros", label: "Barbeiros", icon: Scissors },
   { href: "/admin/clientes", label: "Clientes", icon: Users },
   { href: "/admin/avaliacoes", label: "Avaliações", icon: Star },
   { href: "/admin/horarios", label: "Horários", icon: Clock },
