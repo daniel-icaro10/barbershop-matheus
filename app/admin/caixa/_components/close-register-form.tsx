@@ -3,12 +3,18 @@
 import { useState, useTransition } from "react"
 import { closeCashRegister } from "@/app/_actions/admin/cash-register/close-cash-register"
 import { toast } from "sonner"
-import { Loader2, LockKeyhole } from "lucide-react"
+import { Loader2, LockKeyhole, AlertTriangle, Clock } from "lucide-react"
 import { parseCurrencyInput, formatCurrencyInput, formatCurrency } from "@/lib/utils/money"
 import { useRouter } from "next/navigation"
 import { formatInTimeZone } from "date-fns-tz"
 
 const TZ = "America/Sao_Paulo"
+
+interface PendingPayment {
+  id: string
+  transactionAmountInCents: number
+  createdAt: Date | string
+}
 
 interface Props {
   register: {
@@ -25,6 +31,7 @@ const inputClass = "w-full border border-border/60 bg-background px-3.5 py-2.5 t
 export function CloseRegisterForm({ register, expectedRevenue }: Props) {
   const [finalStr, setFinalStr] = useState(formatCurrencyInput(register.initialAmountInCents))
   const [notes, setNotes] = useState("")
+  const [pendingPayments, setPendingPayments] = useState<PendingPayment[] | null>(null)
   const [pending, startTransition] = useTransition()
   const router = useRouter()
 
@@ -32,14 +39,19 @@ export function CloseRegisterForm({ register, expectedRevenue }: Props) {
   const difference = finalAmountInCents - register.initialAmountInCents
   const reconciliationDiff = finalAmountInCents - (register.initialAmountInCents + expectedRevenue)
 
-  const handleClose = () => {
+  const handleClose = (force = false) => {
     startTransition(async () => {
       const result = await closeCashRegister({
         registerId: register.id,
         finalAmountInCents,
         notes: notes.trim() || undefined,
+        force,
       })
       if (result?.serverError) { toast.error(result.serverError); return }
+      if (result?.data && "pendingPayments" in result.data && result.data.pendingPayments) {
+        setPendingPayments(result.data.pendingPayments)
+        return
+      }
       toast.success("Caixa fechado.")
       router.refresh()
     })
@@ -107,14 +119,55 @@ export function CloseRegisterForm({ register, expectedRevenue }: Props) {
           <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Opcional" maxLength={500} className={inputClass} />
         </div>
 
-        <button
-          onClick={handleClose}
-          disabled={pending}
-          className="flex items-center justify-center gap-2 border border-red-500/30 bg-red-500/[0.08] py-3 text-sm font-bold text-red-400 transition-all hover:bg-red-500/[0.12] disabled:opacity-50"
-        >
-          {pending ? <Loader2 className="size-4 animate-spin" /> : <LockKeyhole className="size-4" />}
-          Fechar caixa
-        </button>
+        {/* Pending payments warning */}
+        {pendingPayments && (
+          <div className="border border-amber-500/30 bg-amber-500/[0.08] p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <AlertTriangle className="size-4 text-amber-400 shrink-0" />
+              <p className="text-sm font-bold text-amber-400">
+                {pendingPayments.length} pagamento{pendingPayments.length !== 1 ? "s" : ""} pendente{pendingPayments.length !== 1 ? "s" : ""} (mais de 10 min)
+              </p>
+            </div>
+            <ul className="mb-4 flex flex-col gap-1">
+              {pendingPayments.map((p) => (
+                <li key={p.id} className="flex items-center justify-between text-xs text-white/60">
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="size-3 text-white/30" />
+                    {formatInTimeZone(p.createdAt, TZ, "HH:mm")}
+                  </span>
+                  <span className="font-semibold">{formatCurrency(p.transactionAmountInCents)}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleClose(true)}
+                disabled={pending}
+                className="flex-1 border border-red-500/30 bg-red-500/[0.08] py-2 text-xs font-bold text-red-400 transition-all hover:bg-red-500/[0.14] disabled:opacity-50"
+              >
+                {pending ? <Loader2 className="size-3 animate-spin mx-auto" /> : "Marcar como expirado e fechar"}
+              </button>
+              <button
+                onClick={() => setPendingPayments(null)}
+                disabled={pending}
+                className="flex-1 border border-white/10 bg-white/[0.03] py-2 text-xs font-bold text-white/50 transition-all hover:bg-white/[0.06] disabled:opacity-50"
+              >
+                Aguardar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!pendingPayments && (
+          <button
+            onClick={() => handleClose(false)}
+            disabled={pending}
+            className="flex items-center justify-center gap-2 border border-red-500/30 bg-red-500/[0.08] py-3 text-sm font-bold text-red-400 transition-all hover:bg-red-500/[0.12] disabled:opacity-50"
+          >
+            {pending ? <Loader2 className="size-4 animate-spin" /> : <LockKeyhole className="size-4" />}
+            Fechar caixa
+          </button>
+        )}
       </div>
     </div>
   )

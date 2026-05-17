@@ -3,12 +3,14 @@
 import { adminActionClient } from "@/lib/action-client"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
+import { subMinutes } from "date-fns"
 import { z } from "zod"
 
 const inputSchema = z.object({
   registerId: z.string().uuid(),
   finalAmountInCents: z.number().int().nonnegative(),
   notes: z.string().max(500).optional(),
+  force: z.boolean().default(false),
 })
 
 export const closeCashRegister = adminActionClient
@@ -21,7 +23,27 @@ export const closeCashRegister = adminActionClient
 
     if (register.closedAt) throw new Error("Caixa já foi fechado.")
 
-    // Sum all approved payments received while this register was open
+    // Payments stuck in PENDING for more than 10 minutes are likely expired
+    const pendingPayments = await prisma.payment.findMany({
+      where: {
+        status: "PENDING",
+        createdAt: { lt: subMinutes(new Date(), 10) },
+        order: { barbershopId: register.barbershopId },
+      },
+      select: { id: true, transactionAmountInCents: true, createdAt: true },
+    })
+
+    if (!parsedInput.force && pendingPayments.length > 0) {
+      return { pendingPayments }
+    }
+
+    if (parsedInput.force && pendingPayments.length > 0) {
+      await prisma.payment.updateMany({
+        where: { id: { in: pendingPayments.map((p) => p.id) } },
+        data: { status: "CANCELED" },
+      })
+    }
+
     const approvedPayments = await prisma.payment.aggregate({
       _sum: { paidAmountInCents: true },
       where: {
