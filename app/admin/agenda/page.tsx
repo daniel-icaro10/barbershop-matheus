@@ -2,8 +2,8 @@ export const dynamic = "force-dynamic"
 
 import { prisma } from "@/lib/prisma"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
-import { startOfDay, endOfDay, addDays } from "date-fns"
-import { toZonedTime, fromZonedTime, formatInTimeZone } from "date-fns-tz"
+import { addDays } from "date-fns"
+import { fromZonedTime, formatInTimeZone } from "date-fns-tz"
 import { ptBR } from "date-fns/locale"
 
 const TZ = "America/Sao_Paulo"
@@ -21,10 +21,13 @@ export default async function AgendaPage({ searchParams }: Props) {
   const todayParam = formatInTimeZone(now, TZ, "yyyy-MM-dd")
   const dateStr = dateParam ?? todayParam
 
-  // Interpret date string as Brazil midnight → convert to UTC boundaries
-  const zonedDate = toZonedTime(new Date(dateStr + "T00:00:00"), TZ)
-  const dayStart = fromZonedTime(startOfDay(zonedDate), TZ)
-  const dayEnd = fromZonedTime(endOfDay(zonedDate), TZ)
+  // Parse dateStr as Brazil-local date → correct UTC boundaries
+  // new Date(dateStr + "T00:00:00") would be UTC midnight on the server, which is
+  // the previous day at 21:00 in Brazil — so we build date parts manually instead.
+  const [yr, mo, dy] = dateStr.split("-").map(Number)
+  const dayStart = fromZonedTime(new Date(yr, mo - 1, dy, 0, 0, 0), TZ)
+  const dayEnd = fromZonedTime(new Date(yr, mo - 1, dy, 23, 59, 59, 999), TZ)
+  const dayOfWeek = new Date(yr, mo - 1, dy).getDay()
 
   const prevDate = formatInTimeZone(addDays(dayStart, -1), TZ, "yyyy-MM-dd")
   const nextDate = formatInTimeZone(addDays(dayStart, 1), TZ, "yyyy-MM-dd")
@@ -47,7 +50,7 @@ export default async function AgendaPage({ searchParams }: Props) {
       where: {
         barbershopId_dayOfWeek: {
           barbershopId: DEFAULT_BARBERSHOP_ID,
-          dayOfWeek: zonedDate.getDay(),
+          dayOfWeek,
         },
       },
     }),

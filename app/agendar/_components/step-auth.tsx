@@ -6,7 +6,7 @@ import { useBookingStore } from "@/lib/store/booking-store"
 import { motion, AnimatePresence } from "framer-motion"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { Scissors, Calendar, Clock, Loader2, RefreshCw, AlertCircle, Mail, ChevronLeft } from "lucide-react"
+import { Scissors, Calendar, Clock, Loader2, RefreshCw, AlertCircle, Mail, ChevronLeft, UserPlus } from "lucide-react"
 
 const formatPrice = (cents: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100)
@@ -17,7 +17,7 @@ interface StepAuthProps {
   onBookingCreate: () => Promise<boolean>
 }
 
-type LoginMode = "options" | "email"
+type LoginMode = "options" | "email" | "signup"
 type BookingStatus = "idle" | "creating" | "error"
 
 export default function StepAuth({ isLoggedIn, onGoogleLogin, onBookingCreate }: StepAuthProps) {
@@ -26,6 +26,7 @@ export default function StepAuth({ isLoggedIn, onGoogleLogin, onBookingCreate }:
   const [loginMode, setLoginMode] = useState<LoginMode>("options")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [name, setName] = useState("")
   const [emailPending, setEmailPending] = useState(false)
   const [emailError, setEmailError] = useState("")
 
@@ -46,6 +47,16 @@ export default function StepAuth({ isLoggedIn, onGoogleLogin, onBookingCreate }:
     const { error } = await authClient.signIn.email({ email, password })
     setEmailPending(false)
     if (error) setEmailError("Email ou senha incorretos.")
+  }
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setEmailError("")
+    setEmailPending(true)
+    const { error } = await authClient.signUp.email({ name, email, password })
+    setEmailPending(false)
+    if (error) setEmailError(error.message ?? "Erro ao criar conta.")
+    // On success, session is created → isLoggedIn becomes true → booking is created automatically
   }
 
   // ── Spinner ──
@@ -206,11 +217,20 @@ export default function StepAuth({ isLoggedIn, onGoogleLogin, onBookingCreate }:
               Entrar com Email
             </button>
 
+            {/* Signup */}
+            <button
+              onClick={() => setLoginMode("signup")}
+              className="flex h-14 w-full items-center justify-center gap-2.5 border border-[#c9a227]/20 bg-[#c9a227]/[0.04] text-sm font-semibold text-[#c9a227]/70 transition-all duration-200 hover:border-[#c9a227]/40 hover:bg-[#c9a227]/[0.08] hover:text-[#c9a227] active:scale-[0.98]"
+            >
+              <UserPlus className="size-4" />
+              Cadastrar agora
+            </button>
+
             <p className="mt-2 text-center text-[11px] text-white/25">
               Seus dados estão seguros e não serão compartilhados
             </p>
           </motion.div>
-        ) : (
+        ) : loginMode === "email" ? (
           <motion.div
             key="email"
             initial={{ opacity: 0, y: 8 }}
@@ -269,6 +289,77 @@ export default function StepAuth({ isLoggedIn, onGoogleLogin, onBookingCreate }:
                 {emailPending ? (
                   <><Loader2 className="size-4 animate-spin" />Entrando…</>
                 ) : "Entrar e confirmar horário"}
+              </button>
+            </form>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="signup"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22 }}
+          >
+            <button
+              onClick={() => { setLoginMode("options"); setEmailError("") }}
+              className="mb-2 flex min-h-[44px] items-center gap-1 text-sm text-white/35 transition-colors hover:text-white/70"
+            >
+              <ChevronLeft className="size-4" />
+              Outras opções
+            </button>
+
+            <form onSubmit={handleSignup} className="flex flex-col gap-2.5">
+              <input
+                type="text"
+                placeholder="Seu nome"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                autoFocus
+                className="w-full border border-white/[0.07] bg-white/[0.03] px-4 py-3.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-[#c9a227]/50 focus:ring-1 focus:ring-[#c9a227]/15 transition-all"
+                style={{ minHeight: 44 }}
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full border border-white/[0.07] bg-white/[0.03] px-4 py-3.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-[#c9a227]/50 focus:ring-1 focus:ring-[#c9a227]/15 transition-all"
+                style={{ minHeight: 44 }}
+              />
+              <input
+                type="password"
+                placeholder="Senha (mín. 8 caracteres)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                className="w-full border border-white/[0.07] bg-white/[0.03] px-4 py-3.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-[#c9a227]/50 focus:ring-1 focus:ring-[#c9a227]/15 transition-all"
+                style={{ minHeight: 44 }}
+              />
+
+              <AnimatePresence>
+                {emailError && (
+                  <motion.p
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm text-red-400"
+                  >
+                    {emailError}
+                  </motion.p>
+                )}
+              </AnimatePresence>
+
+              <button
+                type="submit"
+                disabled={emailPending}
+                className="mt-1 flex h-14 w-full items-center justify-center gap-2 bg-[#c9a227] text-[11px] font-bold uppercase tracking-[0.22em] text-black shadow-[0_0_30px_rgba(201,162,39,0.3)] transition-all hover:bg-white disabled:opacity-50"
+              >
+                {emailPending ? (
+                  <><Loader2 className="size-4 animate-spin" />Criando conta…</>
+                ) : "Cadastrar e confirmar horário"}
               </button>
             </form>
           </motion.div>
