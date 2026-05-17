@@ -37,10 +37,12 @@ export async function processWebhookPayload(body: Record<string, unknown>): Prom
 
   const isFailed = (FAILED_STATUSES as readonly string[]).includes(newStatus)
   let customerId: string | null = null
+  let skipped = false
 
   await prisma.$transaction(async (tx) => {
-    await tx.payment.update({
-      where: { id: payment.id },
+    // Atomic idempotency: only proceed if still PENDING at transaction time
+    const updated = await tx.payment.updateMany({
+      where: { id: payment.id, status: "PENDING" },
       data: {
         status: newStatus as "APPROVED" | "REJECTED" | "REFUNDED" | "CANCELED",
         paidAmountInCents: statusResult.paidAmountInCents ?? null,
@@ -48,6 +50,7 @@ export async function processWebhookPayload(body: Record<string, unknown>): Prom
         webhookRaw: body as Prisma.InputJsonValue,
       },
     })
+    if (updated.count === 0) { skipped = true; return }
 
     if (newStatus === "APPROVED") {
       await tx.orderTimelineEvent.create({ data: { orderId: payment.orderId, type: "PIX_APPROVED", message: "PIX aprovado" } })
@@ -78,6 +81,8 @@ export async function processWebhookPayload(body: Record<string, unknown>): Prom
       if (order) customerId = order.customerId
     }
   })
+
+  if (skipped) return
 
   if (newStatus === "APPROVED") {
     const paidFormatted = statusResult.paidAmountInCents
