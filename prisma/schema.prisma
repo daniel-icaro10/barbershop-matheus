@@ -358,3 +358,15 @@ model PushSubscription {
   @@index([userId])
   @@map("push_subscription")
 }
+
+model WebhookRetryQueue {
+  id          String    @id @default(uuid())
+  payload     Json
+  attempts    Int       @default(0)
+  nextRetryAt DateTime  @db.Timestamptz
+  lastError   String?
+  processedAt DateTime? @db.Timestamptz
+  createdAt   DateTime  @default(now()) @db.Timestamptz
+
+  @@index([nextRetryAt, processedAt])
+}

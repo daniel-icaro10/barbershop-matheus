@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { after } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { processWebhookPayload } from "@/lib/payments/process-webhook"
 import type { Prisma } from "@/generated/prisma/client"
 import { createHmac } from "crypto"
-import { sendPushToUser, sendPushToAdmins } from "@/lib/push"
+import { addMinutes } from "date-fns"
 
 // MP signature algorithm uses headers + query param only, not the raw body.
 // Throws if MERCADO_PAGO_WEBHOOK_SECRET is not configured so the caller
@@ -38,19 +38,14 @@ function validateSignature(req: NextRequest): boolean {
   return hmac === v1
 }
 
-const FAILED_STATUSES = ["REJECTED", "CANCELED"] as const
-type FailedStatus = typeof FAILED_STATUSES[number]
-
 export async function POST(req: NextRequest) {
   const rawBody = await req.text()
 
   let body: Record<string, unknown>
   try {
-    // validateSignature is inside try so a missing secret throws → 500
     if (!validateSignature(req)) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
     }
-
     body = JSON.parse(rawBody)
   } catch (err) {
     if (err instanceof SyntaxError) {
@@ -60,133 +55,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Internal error" }, { status: 500 })
   }
 
-  const type = body.type as string
-  const dataId = (body.data as Record<string, unknown>)?.id as string
-
-  if (type !== "payment" || !dataId) {
-    return NextResponse.json({ received: true })
-  }
-
   try {
-    const payment = await prisma.payment.findUnique({
-      where: { externalPaymentId: String(dataId) },
-      select: { id: true, orderId: true, status: true },
-    })
-
-    if (!payment) return NextResponse.json({ received: true })
-    if (payment.status !== "PENDING") return NextResponse.json({ received: true })
-
-    const { MercadoPagoProvider } = await import("@/lib/payments/mercadopago")
-    const provider = new MercadoPagoProvider()
-    const statusResult = await provider.getPaymentStatus(String(dataId))
-
-    const statusMap: Record<string, string> = {
-      approved: "APPROVED",
-      rejected: "REJECTED",
-      refunded: "REFUNDED",
-      canceled: "CANCELED",
-      expired: "CANCELED",
-    }
-    const newStatus = statusMap[statusResult.status] ?? null
-
-    if (!newStatus || newStatus === payment.status) {
-      return NextResponse.json({ received: true })
-    }
-
-    const isFailed = (FAILED_STATUSES as readonly string[]).includes(newStatus)
-
-    let customerId: string | null = null
-
-    await prisma.$transaction(async (tx) => {
-      await tx.payment.update({
-        where: { id: payment.id },
-        data: {
-          status: newStatus as "APPROVED" | "REJECTED" | "REFUNDED" | "CANCELED",
-          paidAmountInCents: statusResult.paidAmountInCents ?? null,
-          paidAt: statusResult.paidAt ?? null,
-          webhookRaw: body as Prisma.InputJsonValue,
-        },
-      })
-
-      if (newStatus === "APPROVED") {
-        await tx.orderTimelineEvent.create({ data: { orderId: payment.orderId, type: "PIX_APPROVED", message: "PIX aprovado" } })
-
-        const order = await tx.order.findUnique({
-          where: { id: payment.orderId },
-          include: { payments: { where: { status: "APPROVED" }, select: { paidAmountInCents: true } } },
-        })
-
-        if (order) {
-          customerId = order.customerId
-          const totalPaid = order.payments.reduce((s, p) => s + (p.paidAmountInCents ?? 0), 0)
-          if (totalPaid >= order.totalInCents) {
-            await tx.order.update({
-              where: { id: payment.orderId },
-              data: { status: "CLOSED", closedAt: new Date() },
-            })
-          }
-        }
-      }
-
-      if (isFailed) {
-        const eventType = newStatus === "REJECTED" ? "PAYMENT_REJECTED" : "PIX_CANCELED"
-        const eventMsg = newStatus === "REJECTED" ? "PIX recusado" : "PIX cancelado/expirado"
-        await tx.orderTimelineEvent.create({ data: { orderId: payment.orderId, type: eventType, message: eventMsg } })
-
-        const order = await tx.order.findUnique({
-          where: { id: payment.orderId },
-          select: { customerId: true },
-        })
-        if (order) customerId = order.customerId
-      }
-    })
-
-    if (newStatus === "APPROVED") {
-      const paidFormatted = statusResult.paidAmountInCents
-        ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(statusResult.paidAmountInCents / 100)
-        : "PIX"
-
-      after(async () => {
-        await Promise.allSettled([
-          customerId
-            ? sendPushToUser(customerId, {
-                title: "✅ Pagamento confirmado!",
-                body: `Seu PIX de ${paidFormatted} foi aprovado.`,
-                url: "/minha-conta",
-              })
-            : Promise.resolve(),
-          sendPushToAdmins({
-            title: "💰 PIX aprovado",
-            body: `Pagamento de ${paidFormatted} confirmado.`,
-            url: `/admin/comandas/${payment.orderId}`,
-          }),
-        ])
-      })
-    }
-
-    if (isFailed) {
-      const failLabel = (newStatus as FailedStatus) === "REJECTED" ? "recusado" : "cancelado"
-      after(async () => {
-        await Promise.allSettled([
-          customerId
-            ? sendPushToUser(customerId, {
-                title: "⚠️ Pagamento não aprovado",
-                body: `Seu PIX foi ${failLabel}. Acesse o app para tentar novamente ou escolher outro método.`,
-                url: "/minha-conta",
-              })
-            : Promise.resolve(),
-          sendPushToAdmins({
-            title: `PIX ${failLabel}`,
-            body: `Um pagamento PIX foi ${failLabel}.`,
-            url: `/admin/comandas/${payment.orderId}`,
-          }),
-        ])
-      })
-    }
-
-    return NextResponse.json({ received: true })
+    await processWebhookPayload(body)
   } catch (err) {
-    console.error("[mercadopago webhook]", err)
-    return NextResponse.json({ error: "Internal error" }, { status: 500 })
+    const message = err instanceof Error ? err.message : String(err)
+    console.error("[mercadopago webhook] processing error — enqueuing retry", err)
+    await prisma.webhookRetryQueue.create({
+      data: {
+        payload: body as Prisma.InputJsonValue,
+        nextRetryAt: addMinutes(new Date(), 1),
+        lastError: message.slice(0, 500),
+      },
+    })
   }
+
+  return NextResponse.json({ received: true })
 }
