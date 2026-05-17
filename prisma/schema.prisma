@@ -124,6 +124,9 @@ model Booking {
   order  Order?
   review Review?
 
+  // Partial unique index enforced at DB level (Prisma @@unique doesn't support WHERE clauses).
+  // Must exist in Supabase: CREATE UNIQUE INDEX IF NOT EXISTS "booking_active_slot_unique"
+  //   ON "Booking" ("barbershopId", "date") WHERE "cancelled" = false;
   @@index([barbershopId, date])
   @@index([userId])
 }

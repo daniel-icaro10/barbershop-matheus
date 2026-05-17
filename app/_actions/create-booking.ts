@@ -118,6 +118,17 @@ export const createBooking = actionClient
       if (e instanceof Error && e.message === "SLOT_TAKEN") {
         return returnValidationErrors(inputSchema, { _errors: [UNAVAILABLE_MSG] })
       }
+      // P2002 = unique constraint violation: two concurrent requests picked the
+      // same slot and our partial unique index (barbershopId, date WHERE cancelled=false)
+      // caught the second one at the DB level.
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === "P2002"
+      ) {
+        return returnValidationErrors(inputSchema, {
+          _errors: ["Esse horário foi reservado por outra pessoa nesse momento. Escolha outro horário."],
+        })
+      }
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
         return returnValidationErrors(inputSchema, { _errors: [UNAVAILABLE_MSG] })
       }
