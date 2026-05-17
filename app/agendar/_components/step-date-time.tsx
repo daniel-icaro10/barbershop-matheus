@@ -5,6 +5,7 @@ import { Calendar } from "@/app/_components/ui/calendar"
 import { useQuery } from "@tanstack/react-query"
 import { getAvailableSlotsPublic } from "@/app/_actions/get-available-slots-public"
 import { motion, AnimatePresence } from "framer-motion"
+import { isBefore, startOfToday } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Clock } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -18,9 +19,6 @@ function formatDuration(minutes: number): string {
 
 export default function StepDateTime() {
   const { date, time, service, setDate, setTime, next } = useBookingStore()
-
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
 
   const { data: slotsResult, isLoading } = useQuery({
     queryKey: ["slots-public", date?.toDateString(), service?.id],
@@ -72,7 +70,7 @@ export default function StepDateTime() {
           mode="single"
           selected={date ?? undefined}
           onSelect={(d) => { setDate(d ?? null); setTime(null) }}
-          disabled={{ before: today }}
+          disabled={(d) => isBefore(d, startOfToday())}
           locale={ptBR}
           className="mx-auto p-0"
         />
