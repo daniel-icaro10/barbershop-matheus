@@ -1,15 +1,5 @@
-import { PrismaClient } from "../generated/prisma/client"
-import { PrismaPg } from "@prisma/adapter-pg"
-import { Pool } from "pg"
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL!.replace(/[?&]sslmode=[^&]*/g, "").replace(/\?$/, ""),
-  ssl: { rejectUnauthorized: false },
-})
-
-const prisma = new PrismaClient({
-  adapter: new PrismaPg(pool),
-})
+// Import the shared client so SSL config (SUPABASE_CA_CERT) is applied consistently.
+import { prisma } from "../lib/prisma"
 
 const BARBERSHOP_ID = "ac26abca-d0cc-49ab-a073-12ee35655e97"
 
