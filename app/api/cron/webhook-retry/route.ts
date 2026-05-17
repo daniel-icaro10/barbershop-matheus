@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { timingSafeEqual } from "crypto"
 import { prisma } from "@/lib/prisma"
 import { processWebhookPayload } from "@/lib/payments/process-webhook"
+import { sendPushToAdmins } from "@/lib/push"
 import { addMinutes } from "date-fns"
 
 const MAX_ATTEMPTS = 5
@@ -56,6 +57,13 @@ export async function POST(req: NextRequest) {
             nextRetryAt: addMinutes(new Date(), backoffMinutes(newAttempts)),
           },
         })
+        if (newAttempts >= MAX_ATTEMPTS) {
+          await sendPushToAdmins({
+            title: "⚠️ Webhook falhou definitivamente",
+            body: `ID: ${item.id.slice(0, 8)} — ${message.slice(0, 80)}`,
+            url: "/admin",
+          }).catch(() => undefined)
+        }
       }
     }),
   )
