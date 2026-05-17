@@ -17,11 +17,12 @@ interface Props {
     initialAmountInCents: number
     openedBy: { name: string }
   }
+  expectedRevenue: number
 }
 
 const inputClass = "w-full border border-border/60 bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
 
-export function CloseRegisterForm({ register }: Props) {
+export function CloseRegisterForm({ register, expectedRevenue }: Props) {
   const [finalStr, setFinalStr] = useState(formatCurrencyInput(register.initialAmountInCents))
   const [notes, setNotes] = useState("")
   const [pending, startTransition] = useTransition()
@@ -29,6 +30,7 @@ export function CloseRegisterForm({ register }: Props) {
 
   const finalAmountInCents = parseCurrencyInput(finalStr)
   const difference = finalAmountInCents - register.initialAmountInCents
+  const reconciliationDiff = finalAmountInCents - (register.initialAmountInCents + expectedRevenue)
 
   const handleClose = () => {
     startTransition(async () => {
@@ -79,6 +81,22 @@ export function CloseRegisterForm({ register }: Props) {
             <p className={`text-lg font-bold ${difference >= 0 ? "text-emerald-400" : "text-red-400"}`}>
               {difference < 0 ? "- " : "+ "}{formatCurrency(Math.abs(difference))}
             </p>
+          </div>
+        )}
+
+        {/* Reconciliation against system revenue */}
+        {finalAmountInCents > 0 && (
+          <div className="border border-white/[0.07] bg-white/[0.03] divide-y divide-white/[0.05]">
+            <div className="flex items-center justify-between px-4 py-2.5">
+              <span className="text-[11px] text-white/40">Receita apurada (sistema)</span>
+              <span className="text-sm font-bold text-white/60">{formatCurrency(expectedRevenue)}</span>
+            </div>
+            <div className="flex items-center justify-between px-4 py-2.5">
+              <span className="text-[11px] text-white/40">Diferença de reconciliação</span>
+              <span className={`text-sm font-bold ${reconciliationDiff >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                {reconciliationDiff >= 0 ? "+" : ""}{formatCurrency(reconciliationDiff)}
+              </span>
+            </div>
           </div>
         )}
 

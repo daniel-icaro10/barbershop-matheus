@@ -38,7 +38,7 @@ export default async function AgendaPage({ searchParams }: Props) {
       },
       include: {
         service: { select: { name: true, durationInMinutes: true, priceInCents: true } },
-        user: { select: { name: true, email: true, image: true } },
+        user: { select: { id: true, name: true, email: true, image: true } },
       },
       orderBy: { date: "asc" },
     }),

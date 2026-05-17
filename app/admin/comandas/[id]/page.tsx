@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils"
 import { AddItemSheet } from "../_components/add-item-sheet"
 import { PaymentSheet } from "../_components/payment-sheet"
 import { CloseOrderButton } from "./_components/close-order-button"
+import { CancelOrderButton } from "./_components/cancel-order-button"
 import { RemoveItemButton } from "./_components/remove-item-button"
 import { DiscountForm } from "./_components/discount-form"
 import { OrderTimeline } from "./_components/order-timeline"
@@ -241,6 +242,7 @@ export default async function OrderDetailPage({ params }: Props) {
                 : null
             }
           />
+          <CancelOrderButton orderId={order.id} />
           {pendingInCents === 0 && order.items.length > 0 && (
             <CloseOrderButton orderId={order.id} />
           )}

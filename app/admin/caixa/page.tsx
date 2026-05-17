@@ -42,6 +42,19 @@ export default async function CaixaPage() {
 
   const isOpen = todayRegister && !todayRegister.closedAt
 
+  let expectedRevenue = 0
+  if (isOpen) {
+    const agg = await prisma.payment.aggregate({
+      _sum: { paidAmountInCents: true },
+      where: {
+        order: { barbershopId: DEFAULT_BARBERSHOP_ID },
+        status: "APPROVED",
+        paidAt: { gte: todayRegister!.openedAt },
+      },
+    })
+    expectedRevenue = agg._sum.paidAmountInCents ?? 0
+  }
+
   return (
     <div className="p-4 sm:p-8">
       <div className="mb-8">
@@ -67,6 +80,7 @@ export default async function CaixaPage() {
                 initialAmountInCents: todayRegister.initialAmountInCents,
                 openedBy: todayRegister.openedBy,
               }}
+              expectedRevenue={expectedRevenue}
             />
           )}
           {todayRegister && !isOpen && (

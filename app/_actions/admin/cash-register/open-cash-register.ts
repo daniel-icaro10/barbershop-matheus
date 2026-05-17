@@ -23,23 +23,25 @@ export const openCashRegister = adminActionClient
     const dayStart = fromZonedTime(startOfDay(zoned), TZ)
     const dayEnd = fromZonedTime(endOfDay(zoned), TZ)
 
-    const existing = await prisma.cashRegister.findFirst({
-      where: {
-        barbershopId: DEFAULT_BARBERSHOP_ID,
-        openedAt: { gte: dayStart, lte: dayEnd },
-        closedAt: null,
-      },
-      select: { id: true },
-    })
-    if (existing) throw new Error("Já existe um caixa aberto para hoje.")
+    const register = await prisma.$transaction(async (tx) => {
+      const existing = await tx.cashRegister.findFirst({
+        where: {
+          barbershopId: DEFAULT_BARBERSHOP_ID,
+          openedAt: { gte: dayStart, lte: dayEnd },
+          closedAt: null,
+        },
+        select: { id: true },
+      })
+      if (existing) throw new Error("Já existe um caixa aberto para hoje.")
 
-    const register = await prisma.cashRegister.create({
-      data: {
-        barbershopId: DEFAULT_BARBERSHOP_ID,
-        initialAmountInCents: parsedInput.initialAmountInCents,
-        notes: parsedInput.notes ?? null,
-        openedById: ctx.userId,
-      },
+      return tx.cashRegister.create({
+        data: {
+          barbershopId: DEFAULT_BARBERSHOP_ID,
+          initialAmountInCents: parsedInput.initialAmountInCents,
+          notes: parsedInput.notes ?? null,
+          openedById: ctx.userId,
+        },
+      })
     })
 
     revalidatePath("/admin/caixa")
