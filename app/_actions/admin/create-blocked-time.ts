@@ -6,11 +6,16 @@ import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
-const inputSchema = z.object({
-  startDate: z.coerce.date(),
-  endDate: z.coerce.date(),
-  reason: z.string().optional(),
-})
+const inputSchema = z
+  .object({
+    startDate: z.coerce.date(),
+    endDate: z.coerce.date(),
+    reason: z.string().optional(),
+  })
+  .refine((d) => d.endDate > d.startDate, {
+    message: "Data/hora final deve ser após a inicial",
+    path: ["endDate"],
+  })
 
 export const createBlockedTime = adminActionClient
   .inputSchema(inputSchema)
