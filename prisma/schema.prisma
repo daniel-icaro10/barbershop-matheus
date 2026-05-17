@@ -120,6 +120,7 @@ model Booking {
   endDate      DateTime?      @db.Timestamptz
   cancelled    Boolean        @default(false)
   cancelledAt  DateTime?      @db.Timestamptz
+  createdAt    DateTime       @default(now()) @db.Timestamptz
 
   order  Order?
   review Review?
@@ -129,6 +130,7 @@ model Booking {
   //   ON "Booking" ("barbershopId", "date") WHERE "cancelled" = false;
   @@index([barbershopId, date])
   @@index([userId])
+  @@index([userId, createdAt])
 }
 
 model Order {

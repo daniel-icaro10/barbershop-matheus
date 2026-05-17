@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma"
 export async function rateLimitBooking(userId: string, limit: number, windowMs: number): Promise<boolean> {
   const since = new Date(Date.now() - windowMs)
   const count = await prisma.booking.count({
-    where: { userId, date: { gte: since } },
+    where: { userId, createdAt: { gte: since } },
   })
   return count < limit
 }
