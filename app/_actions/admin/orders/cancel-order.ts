@@ -2,6 +2,8 @@
 
 import { adminActionClient } from "@/lib/action-client"
 import { prisma } from "@/lib/prisma"
+import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
+import { assertOrderOwnership } from "@/lib/assert-order-ownership"
 import { getPaymentProvider } from "@/lib/payments"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
@@ -14,6 +16,8 @@ const inputSchema = z.object({
 export const cancelOrder = adminActionClient
   .inputSchema(inputSchema)
   .action(async ({ parsedInput }) => {
+    await assertOrderOwnership(parsedInput.orderId, DEFAULT_BARBERSHOP_ID)
+
     const order = await prisma.order.findUniqueOrThrow({
       where: { id: parsedInput.orderId },
       select: { status: true },

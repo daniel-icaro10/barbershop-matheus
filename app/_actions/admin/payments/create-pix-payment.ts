@@ -2,6 +2,8 @@
 
 import { adminActionClient } from "@/lib/action-client"
 import { prisma } from "@/lib/prisma"
+import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
+import { assertOrderOwnership } from "@/lib/assert-order-ownership"
 import { getPaymentProvider } from "@/lib/payments"
 import { featureFlags } from "@/lib/feature-flags"
 import { revalidatePath } from "next/cache"
@@ -17,6 +19,8 @@ const inputSchema = z.object({
 export const createPixPayment = adminActionClient
   .inputSchema(inputSchema)
   .action(async ({ parsedInput }) => {
+    await assertOrderOwnership(parsedInput.orderId, DEFAULT_BARBERSHOP_ID)
+
     if (!featureFlags.pixEnabled) throw new Error("PIX não está habilitado.")
 
     const order = await prisma.order.findUniqueOrThrow({

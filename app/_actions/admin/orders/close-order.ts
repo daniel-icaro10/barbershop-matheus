@@ -2,6 +2,8 @@
 
 import { adminActionClient } from "@/lib/action-client"
 import { prisma } from "@/lib/prisma"
+import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
+import { assertOrderOwnership } from "@/lib/assert-order-ownership"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { timelineEvent } from "./_timeline"
@@ -13,6 +15,8 @@ const inputSchema = z.object({
 export const closeOrder = adminActionClient
   .inputSchema(inputSchema)
   .action(async ({ parsedInput }) => {
+    await assertOrderOwnership(parsedInput.orderId, DEFAULT_BARBERSHOP_ID)
+
     await prisma.$transaction(async (tx) => {
       const order = await tx.order.findUniqueOrThrow({
         where: { id: parsedInput.orderId },

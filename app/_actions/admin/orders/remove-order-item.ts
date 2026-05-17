@@ -2,6 +2,8 @@
 
 import { adminActionClient } from "@/lib/action-client"
 import { prisma } from "@/lib/prisma"
+import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
+import { assertOrderOwnership } from "@/lib/assert-order-ownership"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { timelineEvent } from "./_timeline"
@@ -14,6 +16,8 @@ const inputSchema = z.object({
 export const removeOrderItem = adminActionClient
   .inputSchema(inputSchema)
   .action(async ({ parsedInput }) => {
+    await assertOrderOwnership(parsedInput.orderId, DEFAULT_BARBERSHOP_ID)
+
     const approvedPayment = await prisma.payment.findFirst({
       where: { orderId: parsedInput.orderId, status: "APPROVED" },
       select: { id: true },
