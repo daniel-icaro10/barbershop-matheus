@@ -11,15 +11,24 @@ export async function GET(
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id } = await params
-  const payment = await prisma.payment.findUnique({
-    where: { id },
-    select: { status: true, order: { select: { customerId: true } } },
-  })
+
+  // Fetch payment and user role from DB in parallel — role must come from DB, not the
+  // session token, which can be stale if the user's role was changed after login.
+  const [payment, dbUser] = await Promise.all([
+    prisma.payment.findUnique({
+      where: { id },
+      select: { status: true, order: { select: { customerId: true } } },
+    }),
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    }),
+  ])
 
   if (!payment) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
   const isOwner = payment.order.customerId === session.user.id
-  const isAdmin = (session.user as { role?: string }).role === "ADMIN"
+  const isAdmin = dbUser?.role === "ADMIN"
   if (!isOwner && !isAdmin) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
   return NextResponse.json({ status: payment.status })
