@@ -10,6 +10,7 @@ import { headers } from "next/headers"
 import { revalidatePath } from "next/cache"
 import { after } from "next/server"
 import { toZonedTime, formatInTimeZone } from "date-fns-tz"
+import { APP_TIMEZONE } from "@/lib/constants/timezone"
 import { rateLimitBooking } from "@/lib/rate-limit"
 import { sendPushToUser, sendPushToAdmins } from "@/lib/push"
 import { z } from "zod"
@@ -49,7 +50,7 @@ export const createBooking = actionClient
       durationInMinutes: service.durationInMinutes,
     })
 
-    const zonedDate = toZonedTime(date, "America/Sao_Paulo")
+    const zonedDate = toZonedTime(date, APP_TIMEZONE)
     const requestedSlot = `${String(zonedDate.getHours()).padStart(2, "0")}:${String(zonedDate.getMinutes()).padStart(2, "0")}`
     if (!available.includes(requestedSlot)) {
       return returnValidationErrors(inputSchema, { _errors: [UNAVAILABLE_MSG] })
@@ -98,7 +99,7 @@ export const createBooking = actionClient
       const userId = session.user.id
       const clientName = session.user.name ?? "Cliente"
       after(async () => {
-        const dateStr = formatInTimeZone(bookingSnapshot.date, "America/Sao_Paulo", "dd/MM/yyyy 'às' HH:mm")
+        const dateStr = formatInTimeZone(bookingSnapshot.date, APP_TIMEZONE, "dd/MM/yyyy 'às' HH:mm")
         await Promise.allSettled([
           sendPushToUser(userId, {
             title: "Agendamento confirmado ✂️",

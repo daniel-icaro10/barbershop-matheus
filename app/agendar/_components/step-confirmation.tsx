@@ -4,6 +4,8 @@ import { useBookingStore } from "@/lib/store/booking-store"
 import { motion } from "framer-motion"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import { fromZonedTime } from "date-fns-tz"
+import { APP_TIMEZONE } from "@/lib/constants/timezone"
 import { CalendarPlus, RotateCcw, ArrowLeft, QrCode, MapPin, Navigation, Map } from "lucide-react"
 import Link from "next/link"
 
@@ -21,10 +23,8 @@ interface LocationData {
 }
 
 export default function StepConfirmation({
-  whatsappPhone,
   location,
 }: {
-  whatsappPhone: string
   location?: LocationData | null
 }) {
   const { service, date, time, personalData, reset } = useBookingStore()
@@ -33,8 +33,10 @@ export default function StepConfirmation({
   const calendarUrl = () => {
     if (!date || !time || !service) return "#"
     const [h, m] = time.split(":").map(Number)
-    const start = new Date(date)
-    start.setHours(h, m, 0)
+    const start = fromZonedTime(
+      new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), h, m, 0, 0)),
+      APP_TIMEZONE,
+    )
     const end = new Date(start)
     end.setMinutes(end.getMinutes() + (service.durationInMinutes ?? 30))
     const fmt = (d: Date) => d.toISOString().replace(/[-:]|\.\d{3}/g, "")

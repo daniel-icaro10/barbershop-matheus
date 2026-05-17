@@ -23,8 +23,6 @@ export default async function AgendarPage({ searchParams }: Props) {
     }),
   ])
 
-  const rawPhone = barbershop?.phones?.[0]?.replace(/\D/g, "") ?? ""
-  const whatsappPhone = rawPhone.startsWith("55") ? rawPhone : `55${rawPhone}`
   const initialService = serviceId ? services.find((s) => s.id === serviceId) ?? null : null
 
   const location = barbershop ? {
@@ -34,5 +32,5 @@ export default async function AgendarPage({ searchParams }: Props) {
     googleMapsUrl: barbershop.googleMapsUrl ?? null,
   } : null
 
-  return <BookingFlow services={services} whatsappPhone={whatsappPhone} initialService={initialService} location={location} />
+  return <BookingFlow services={services} initialService={initialService} location={location} />
 }

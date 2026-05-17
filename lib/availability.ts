@@ -1,6 +1,7 @@
 import { startOfDay, endOfDay } from "date-fns"
 import { toZonedTime, fromZonedTime } from "date-fns-tz"
 import { prisma } from "@/lib/prisma"
+import { APP_TIMEZONE } from "@/lib/constants/timezone"
 
 export interface Interval {
   start: Date
@@ -12,7 +13,7 @@ export function intervalsOverlap(a: Interval, b: Interval): boolean {
   return a.start < b.end && a.end > b.start
 }
 
-const TIMEZONE = "America/Sao_Paulo"
+const TIMEZONE = APP_TIMEZONE
 const DEFAULT_OPEN = "09:00"
 const DEFAULT_CLOSE = "19:00"
 

@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef } from "react"
 import { AnimatePresence, motion } from "framer-motion"
+import { fromZonedTime } from "date-fns-tz"
 import { authClient } from "@/lib/auth-client"
 import { useBookingStore } from "@/lib/store/booking-store"
 import { createBooking } from "@/app/_actions/create-booking"
+import { APP_TIMEZONE } from "@/lib/constants/timezone"
 import { toast } from "sonner"
 import type { BookingService } from "@/lib/store/booking-store"
 
@@ -26,12 +28,10 @@ interface LocationData {
 
 export default function BookingFlow({
   services,
-  whatsappPhone,
   initialService = null,
   location = null,
 }: {
   services: BookingService[]
-  whatsappPhone: string
   initialService?: BookingService | null
   location?: LocationData | null
 }) {
@@ -59,9 +59,15 @@ export default function BookingFlow({
       isCreatingRef.current = false
       return false
     }
-    const bookingDate = new Date(date)
     const [h, m] = time.split(":").map(Number)
-    bookingDate.setHours(h, m, 0, 0)
+    // Construct the booking time as São Paulo local time, regardless of the browser's timezone.
+    // date.getFullYear/Month/Date() gives the calendar day the user selected (browser local values
+    // always match the visible calendar day). new Date(Date.UTC(...)) avoids browser-TZ contamination
+    // before fromZonedTime interprets those values as SP time and converts to UTC.
+    const bookingDate = fromZonedTime(
+      new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), h, m, 0, 0)),
+      APP_TIMEZONE,
+    )
 
     const { personalData } = useBookingStore.getState()
     const phone = personalData?.phone?.replace(/\D/g, "") ?? undefined
@@ -135,10 +141,9 @@ export default function BookingFlow({
         onGoogleLogin={handleGoogleLogin}
         onBookingCreate={handleCreateBooking}
       />,
-      <StepConfirmation key="confirmation" whatsappPhone={whatsappPhone} location={location} />,
+      <StepConfirmation key="confirmation" location={location} />,
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [services, isLoggedIn, handleGoogleLogin, handleCreateBooking, whatsappPhone, location],
+    [services, isLoggedIn, handleGoogleLogin, handleCreateBooking, location],
   )
 
   const pageVariants = {
