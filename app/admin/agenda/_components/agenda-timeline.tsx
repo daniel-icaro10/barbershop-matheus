@@ -1,6 +1,7 @@
 "use client"
 
-import { formatInTimeZone } from "date-fns-tz"
+import { formatInTimeZone, toZonedTime } from "date-fns-tz"
+import { APP_TIMEZONE } from "@/lib/constants/timezone"
 import { useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -8,7 +9,7 @@ import Image from "next/image"
 import { Loader2, ClipboardList } from "lucide-react"
 import { createOrder } from "@/app/_actions/admin/orders/create-order"
 
-const TZ = "America/Sao_Paulo"
+const TZ = APP_TIMEZONE
 
 // 32 px per 15-min block → same visual density as before (64 px/30 min)
 const SLOT_HEIGHT = 32
@@ -99,8 +100,8 @@ export function AgendaTimeline({ bookings, openTime, closeTime }: Props) {
   const gridLines = generateGridLines(openTime, closeTime)
 
   function topOffset(isoDate: string): number {
-    const d = new Date(isoDate)
-    const minutes = d.getHours() * 60 + d.getMinutes() - openMin
+    const z = toZonedTime(new Date(isoDate), APP_TIMEZONE)
+    const minutes = z.getHours() * 60 + z.getMinutes() - openMin
     return (minutes / 15) * SLOT_HEIGHT
   }
 
