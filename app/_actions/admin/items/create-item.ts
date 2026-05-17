@@ -13,7 +13,7 @@ const inputSchema = z.object({
   type: z.enum(["SERVICE", "PRODUCT"]),
   priceInCents: z.number().int().positive(),
   costInCents: z.number().int().nonnegative().optional(),
-  durationInMinutes: z.number().int().positive().optional(),
+  durationInMinutes: z.number().int().min(15).optional(),
   stockQuantity: z.number().int().nonnegative().optional(),
   minimumStock: z.number().int().nonnegative().optional(),
   commissionType: z.enum(["PERCENTAGE", "FIXED"]).optional(),

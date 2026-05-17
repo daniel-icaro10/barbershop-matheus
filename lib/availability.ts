@@ -35,12 +35,13 @@ function slotToDate(date: Date, slot: string): Date {
 // Generate slot start times aligned to the service duration.
 // Step = durationInMinutes so a 45-min service yields 09:00, 09:45, 10:30…
 // and a 60-min service yields 09:00, 10:00, 11:00…
+// Minimum enforced at schema level (create-item / update-item): min(15).
 function generateSlots(openTime: string, closeTime: string, durationInMinutes: number): string[] {
   const [oh, om] = openTime.split(":").map(Number)
   const [ch, cm] = closeTime.split(":").map(Number)
   let cur = oh * 60 + om
   const end = ch * 60 + cm
-  const step = Math.max(durationInMinutes, 15) // never coarser than 15 min
+  const step = durationInMinutes
   const slots: string[] = []
   while (cur < end) {
     slots.push(`${String(Math.floor(cur / 60)).padStart(2, "0")}:${String(cur % 60).padStart(2, "0")}`)
