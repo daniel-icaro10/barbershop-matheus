@@ -1,10 +1,13 @@
 export const dynamic = "force-dynamic"
 
+import { requireAdmin } from "@/lib/admin-guard"
 import { prisma } from "@/lib/prisma"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
 import { BlockedTimesManager } from "./_components/blocked-times-manager"
 
 export default async function BloqueiosPage() {
+  await requireAdmin()
+
   const blockedTimes = await prisma.blockedTime.findMany({
     where: {
       barbershopId: DEFAULT_BARBERSHOP_ID,

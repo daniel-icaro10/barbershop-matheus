@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic"
 
+import { requireAdmin } from "@/lib/admin-guard"
 import { prisma } from "@/lib/prisma"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths, subDays, format } from "date-fns"
@@ -7,7 +8,7 @@ import { toZonedTime, fromZonedTime } from "date-fns-tz"
 import { ptBR } from "date-fns/locale"
 import { formatCurrency } from "@/lib/utils/money"
 import { calculateCommission } from "@/lib/utils/commission"
-import { TrendingUp, TrendingDown, DollarSign, CreditCard, Clock, BarChart2, Zap, Package, Scissors, AlertTriangle } from "lucide-react"
+import { TrendingUp, TrendingDown, CreditCard, Clock, BarChart2, Zap, Package, Scissors, AlertTriangle } from "lucide-react"
 import { RevenueChart } from "./_components/revenue-chart"
 import { ActivityFeed } from "./_components/activity-feed"
 import { cn } from "@/lib/utils"
@@ -20,6 +21,8 @@ function pct(current: number, previous: number): number {
 }
 
 export default async function FinanceiroDashboard() {
+  await requireAdmin()
+
   const now = new Date()
   const zonedNow = toZonedTime(now, TZ)
 

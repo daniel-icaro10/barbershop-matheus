@@ -1,11 +1,12 @@
 export const dynamic = "force-dynamic"
 
+import { requireAdmin } from "@/lib/admin-guard"
 import { prisma } from "@/lib/prisma"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
 import { notFound } from "next/navigation"
 import { formatCurrency } from "@/lib/utils/money"
 import { formatInTimeZone } from "date-fns-tz"
-import { ChevronLeft, Clock, Package, ScissorsIcon, CheckCircle2, XCircle, AlertCircle } from "lucide-react"
+import { ChevronLeft, Package, ScissorsIcon, CheckCircle2, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { AddItemSheet } from "../_components/add-item-sheet"
@@ -23,6 +24,8 @@ interface Props {
 }
 
 export default async function OrderDetailPage({ params }: Props) {
+  await requireAdmin()
+
   const { id } = await params
 
   const [order, allItems] = await Promise.all([

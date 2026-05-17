@@ -1,10 +1,13 @@
 export const dynamic = "force-dynamic"
 
+import { requireAdmin } from "@/lib/admin-guard"
 import { prisma } from "@/lib/prisma"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
 import { WorkingHoursForm } from "./_components/working-hours-form"
 
 export default async function HorariosPage() {
+  await requireAdmin()
+
   const workingHours = await prisma.workingHours.findMany({
     where: { barbershopId: DEFAULT_BARBERSHOP_ID },
     orderBy: { dayOfWeek: "asc" },

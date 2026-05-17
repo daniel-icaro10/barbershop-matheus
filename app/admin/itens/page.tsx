@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic"
 
+import { requireAdmin } from "@/lib/admin-guard"
 import { prisma } from "@/lib/prisma"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
 import { formatCurrency } from "@/lib/utils/money"
@@ -11,6 +12,8 @@ import { StockAlertBadge } from "./_components/stock-alert-badge"
 import Image from "next/image"
 
 export default async function ItensPage() {
+  await requireAdmin()
+
   const items = await prisma.barbershopItem.findMany({
     where: { barbershopId: DEFAULT_BARBERSHOP_ID },
     orderBy: [{ type: "asc" }, { priceInCents: "asc" }],

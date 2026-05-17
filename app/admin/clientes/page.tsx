@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic"
 
+import { requireAdmin } from "@/lib/admin-guard"
 import { prisma } from "@/lib/prisma"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
 import { ptBR } from "date-fns/locale"
@@ -13,6 +14,8 @@ const fmt = (cents: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100)
 
 export default async function ClientesPage() {
+  await requireAdmin()
+
   const bookings = await prisma.booking.findMany({
     where: { barbershopId: DEFAULT_BARBERSHOP_ID, cancelled: false },
     include: {

@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic"
 
+import { requireAdmin } from "@/lib/admin-guard"
 import { prisma } from "@/lib/prisma"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
 import { ShoppingBag } from "lucide-react"
@@ -13,6 +14,8 @@ interface Props {
 }
 
 export default async function ComandasPage({ searchParams }: Props) {
+  await requireAdmin()
+
   const { status, cursor } = await searchParams
   const filter = (status === "CLOSED" || status === "CANCELED") ? status : undefined
   const activeStatus = filter ?? "OPEN"

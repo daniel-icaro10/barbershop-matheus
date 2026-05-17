@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic"
 
+import { requireAdmin } from "@/lib/admin-guard"
 import { prisma } from "@/lib/prisma"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
 import { Star, MessageSquare } from "lucide-react"
@@ -11,6 +12,8 @@ interface Props {
 }
 
 export default async function AvaliacoesPage({ searchParams }: Props) {
+  await requireAdmin()
+
   const { filter } = await searchParams
   const showAll = filter === "all"
 
@@ -31,7 +34,6 @@ export default async function AvaliacoesPage({ searchParams }: Props) {
   })
 
   const total = allReviews.length
-  const approved = allReviews.filter((r) => r.approved).length
   const avg = total > 0
     ? (allReviews.reduce((s, r) => s + r.rating, 0) / total).toFixed(1)
     : "—"

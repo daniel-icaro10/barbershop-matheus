@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic"
 
+import { requireAdmin } from "@/lib/admin-guard"
 import { prisma } from "@/lib/prisma"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
 import { addDays } from "date-fns"
@@ -16,6 +17,8 @@ interface Props {
 }
 
 export default async function AgendaPage({ searchParams }: Props) {
+  await requireAdmin()
+
   const { date: dateParam } = await searchParams
   const now = new Date()
   const todayParam = formatInTimeZone(now, TZ, "yyyy-MM-dd")

@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic"
 
+import { requireAdmin } from "@/lib/admin-guard"
 import { prisma } from "@/lib/prisma"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
 import { formatCurrency } from "@/lib/utils/money"
@@ -14,6 +15,8 @@ import { CloseRegisterForm } from "./_components/close-register-form"
 const TZ = "America/Sao_Paulo"
 
 export default async function CaixaPage() {
+  await requireAdmin()
+
   const now = new Date()
   const zoned = toZonedTime(now, TZ)
   const todayStart = fromZonedTime(startOfDay(zoned), TZ)

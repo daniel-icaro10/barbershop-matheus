@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic"
 
+import { requireAdmin } from "@/lib/admin-guard"
 import { prisma } from "@/lib/prisma"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
 import { startOfDay, endOfDay } from "date-fns"
@@ -14,6 +15,8 @@ const fmt = (cents: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100)
 
 export default async function AdminDashboard() {
+  await requireAdmin()
+
   const now = new Date()
   const zonedNow = toZonedTime(now, TZ)
   const todayStart = fromZonedTime(startOfDay(zonedNow), TZ)

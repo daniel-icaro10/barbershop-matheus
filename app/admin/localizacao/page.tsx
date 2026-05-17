@@ -1,11 +1,14 @@
 export const dynamic = "force-dynamic"
 
+import { requireAdmin } from "@/lib/admin-guard"
 import { prisma } from "@/lib/prisma"
 import { DEFAULT_BARBERSHOP_ID } from "@/lib/constants/barbershop"
 import { MapPin } from "lucide-react"
 import { LocationForm } from "./_components/location-form"
 
 export default async function LocalizacaoPage() {
+  await requireAdmin()
+
   const barbershop = await prisma.barbershop.findUniqueOrThrow({
     where: { id: DEFAULT_BARBERSHOP_ID },
     select: { address: true, latitude: true, longitude: true, googleMapsUrl: true },
