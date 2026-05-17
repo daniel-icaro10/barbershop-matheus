@@ -5,9 +5,8 @@ import { createBlockedTime } from "@/app/_actions/admin/create-blocked-time"
 import { deleteBlockedTime } from "@/app/_actions/admin/delete-blocked-time"
 import { toast } from "sonner"
 import { ptBR } from "date-fns/locale"
-import { formatInTimeZone } from "date-fns-tz"
-
-const TZ = "America/Sao_Paulo"
+import { formatInTimeZone, fromZonedTime } from "date-fns-tz"
+import { APP_TIMEZONE } from "@/lib/constants/timezone"
 import { Trash2, Plus, Ban } from "lucide-react"
 
 interface BlockedEntry {
@@ -37,8 +36,8 @@ export function BlockedTimesManager({ initial }: Props) {
       toast.error("Preencha as datas de início e fim.")
       return
     }
-    const start = new Date(`${startDate}T${startTime}:00`)
-    const end = new Date(`${endDate}T${endTime}:00`)
+    const start = fromZonedTime(`${startDate}T${startTime}:00`, APP_TIMEZONE)
+    const end = fromZonedTime(`${endDate}T${endTime}:00`, APP_TIMEZONE)
     if (end <= start) {
       toast.error("A data de fim deve ser após o início.")
       return
@@ -167,9 +166,9 @@ export function BlockedTimesManager({ initial }: Props) {
                     {item.reason ?? "Indisponibilidade"}
                   </p>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    {formatInTimeZone(new Date(item.startDate), TZ, "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                    {formatInTimeZone(new Date(item.startDate), APP_TIMEZONE, "dd/MM/yyyy HH:mm", { locale: ptBR })}
                     {" → "}
-                    {formatInTimeZone(new Date(item.endDate), TZ, "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                    {formatInTimeZone(new Date(item.endDate), APP_TIMEZONE, "dd/MM/yyyy HH:mm", { locale: ptBR })}
                   </p>
                 </div>
                 <button
