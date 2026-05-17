@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { timingSafeEqual } from "crypto"
 import { prisma } from "@/lib/prisma"
 import { processWebhookPayload } from "@/lib/payments/process-webhook"
 import { addMinutes } from "date-fns"
@@ -9,13 +10,20 @@ function backoffMinutes(attempts: number): number {
   return Math.pow(2, attempts) // 2, 4, 8, 16, 32 minutes
 }
 
+function safeCompare(a: string, b: string): boolean {
+  const ba = Buffer.from(a)
+  const bb = Buffer.from(b)
+  if (ba.length !== bb.length) return false
+  return timingSafeEqual(ba, bb)
+}
+
 export async function POST(req: NextRequest) {
   const secret = process.env.CRON_SECRET
   // Vercel Cron sends Authorization: Bearer <CRON_SECRET> automatically.
   // x-cron-secret kept for backward compatibility with manual calls.
   const bearer = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? ""
   const custom = req.headers.get("x-cron-secret") ?? ""
-  if (!secret || (bearer !== secret && custom !== secret)) {
+  if (!secret || (!safeCompare(bearer, secret) && !safeCompare(custom, secret))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
