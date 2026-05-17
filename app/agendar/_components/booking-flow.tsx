@@ -18,6 +18,38 @@ import StepAuth from "./step-auth"
 import StepConfirmation from "./step-confirmation"
 
 const DRAFT_KEY = "booking-draft-pending"
+const DRAFT_TTL_MS = 30 * 60 * 1000 // 30 min
+
+interface BookingDraft {
+  serviceId: string
+  time: string
+  date: string
+  personalData: { name: string; phone: string; notes: string }
+}
+
+function saveDraft(data: BookingDraft): void {
+  localStorage.setItem(DRAFT_KEY, JSON.stringify({ data, expiresAt: Date.now() + DRAFT_TTL_MS }))
+}
+
+function loadDraft(): BookingDraft | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as { data: BookingDraft; expiresAt: number }
+    if (Date.now() > parsed.expiresAt) {
+      localStorage.removeItem(DRAFT_KEY)
+      return null
+    }
+    return parsed.data
+  } catch {
+    localStorage.removeItem(DRAFT_KEY)
+    return null
+  }
+}
+
+function clearDraft(): void {
+  localStorage.removeItem(DRAFT_KEY)
+}
 
 interface LocationData {
   address: string
@@ -90,27 +122,16 @@ export default function BookingFlow({
   // Recover booking state after OAuth redirect
   useEffect(() => {
     if (!session?.user) return
-    const raw = sessionStorage.getItem(DRAFT_KEY)
-    if (!raw) return
+    const draft = loadDraft()
+    if (!draft) return
 
-    try {
-      const draft = JSON.parse(raw) as {
-        serviceId: string
-        time: string
-        date: string
-        personalData: { name: string; phone: string; notes: string }
-      }
-      sessionStorage.removeItem(DRAFT_KEY)
-
-      const foundService = services.find((s) => s.id === draft.serviceId)
-      if (foundService) store.setService(foundService)
-      store.setDate(new Date(draft.date))
-      store.setTime(draft.time)
-      if (draft.personalData) store.setPersonalData(draft.personalData)
-      handleCreateBooking()
-    } catch {
-      sessionStorage.removeItem(DRAFT_KEY)
-    }
+    clearDraft()
+    const foundService = services.find((s) => s.id === draft.serviceId)
+    if (foundService) store.setService(foundService)
+    store.setDate(new Date(draft.date))
+    store.setTime(draft.time)
+    if (draft.personalData) store.setPersonalData(draft.personalData)
+    handleCreateBooking()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user])
 
@@ -118,15 +139,12 @@ export default function BookingFlow({
     const { service, time, date, personalData } = useBookingStore.getState()
     if (!service || !time || !date) return
 
-    sessionStorage.setItem(
-      DRAFT_KEY,
-      JSON.stringify({
-        serviceId: service.id,
-        time,
-        date: date instanceof Date ? date.toISOString() : date,
-        personalData,
-      })
-    )
+    saveDraft({
+      serviceId: service.id,
+      time,
+      date: date instanceof Date ? date.toISOString() : date,
+      personalData: personalData ?? { name: "", phone: "", notes: "" },
+    })
     await authClient.signIn.social({ provider: "google" })
   }, [])
 
