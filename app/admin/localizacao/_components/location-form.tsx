@@ -80,7 +80,7 @@ export function LocationForm({ barbershop }: Props) {
           <label className={labelClass}>URL Google Maps (opcional)</label>
           <input type="url" value={mapsUrl} onChange={(e) => setMapsUrl(e.target.value)} placeholder="https://maps.google.com/..." className={inputClass} />
           <p className="text-[10px] text-muted-foreground">
-            Link de compartilhamento do Google Maps para botão "Como chegar"
+            Link de compartilhamento do Google Maps para botão &quot;Como chegar&quot;
           </p>
         </div>
 

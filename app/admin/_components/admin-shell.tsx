@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Menu } from "lucide-react"
 import Image from "next/image"
 import { AdminSidebar } from "./admin-sidebar"
@@ -12,13 +12,10 @@ interface AdminShellProps {
 
 export function AdminShell({ user, children }: AdminShellProps) {
   const [open, setOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
 
   return (
     <div className="flex min-h-screen bg-[#080808]">
-      {/* Mobile backdrop — só renderiza no cliente para evitar hydration mismatch */}
-      {mounted && open && (
+      {open && (
         <div
           className="fixed inset-0 z-30 bg-black/70 backdrop-blur-sm lg:hidden"
           onClick={() => setOpen(false)}
