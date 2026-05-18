@@ -91,15 +91,15 @@ export default function BookingFlow({
       isCreatingRef.current = false
       return false
     }
-    const [h, m] = time.split(":").map(Number)
-    // Construct the booking time as São Paulo local time, regardless of the browser's timezone.
-    // date.getFullYear/Month/Date() gives the calendar day the user selected (browser local values
-    // always match the visible calendar day). new Date(Date.UTC(...)) avoids browser-TZ contamination
-    // before fromZonedTime interprets those values as SP time and converts to UTC.
-    const bookingDate = fromZonedTime(
-      new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), h, m, 0, 0)),
-      APP_TIMEZONE,
-    )
+    // Build an ISO string "YYYY-MM-DDTHH:MM:00" from browser-local calendar values
+    // (getFullYear/Month/Date always match the visible calendar day) + the selected slot,
+    // then let fromZonedTime interpret that string as São Paulo local time → UTC.
+    // Avoids browser-TZ contamination: passing a Date object to fromZonedTime uses
+    // local getters that vary by system timezone; a plain string bypasses that entirely.
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, "0")
+    const day = String(date.getDate()).padStart(2, "0")
+    const bookingDate = fromZonedTime(`${year}-${month}-${day}T${time}:00`, APP_TIMEZONE)
 
     const { personalData } = useBookingStore.getState()
     const phone = personalData?.phone?.replace(/\D/g, "") ?? undefined
