@@ -1,5 +1,9 @@
 import type { NextConfig } from "next"
 
+// Must be set before any date-related code runs so Node.js uses São Paulo
+// timezone for all Date local-getter calls (startOfDay, endOfDay, etc.)
+process.env.TZ = "America/Sao_Paulo"
+
 // CSP is set dynamically in middleware.ts (nonce-based, per-request).
 const securityHeaders = [
   // 2 years; omit "preload" until domain is deliberately submitted to hstspreload.org
