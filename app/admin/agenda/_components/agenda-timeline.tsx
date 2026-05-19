@@ -19,7 +19,7 @@ interface BookingEntry {
   id: string
   date: string
   endDate: string | null
-  service: { name: string; durationInMinutes: number; priceInCents: number }
+  service: { id: string; name: string; durationInMinutes: number; priceInCents: number }
   user: { id: string; name: string; email: string; image: string | null; phone: string | null }
 }
 
@@ -57,14 +57,14 @@ function generateGridLines(openTime: string, closeTime: string) {
   return lines
 }
 
-function OpenOrderButton({ bookingId, userId }: { bookingId: string; userId: string }) {
+function OpenOrderButton({ bookingId, userId, serviceItemId }: { bookingId: string; userId: string; serviceItemId: string }) {
   const [pending, startTransition] = useTransition()
   const router = useRouter()
 
   const handle = (e: React.MouseEvent) => {
     e.stopPropagation()
     startTransition(async () => {
-      const result = await createOrder({ customerId: userId, bookingId })
+      const result = await createOrder({ customerId: userId, bookingId, serviceItemId })
       if (result?.serverError) { toast.error(result.serverError); return }
       const orderId = result?.data?.order?.id
       if (orderId) router.push(`/admin/comandas/${orderId}`)
@@ -205,7 +205,7 @@ export function AgendaTimeline({ bookings, openTime, closeTime }: Props) {
                     {height >= 64 && (
                       <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                         <ReminderButton booking={booking} />
-                        <OpenOrderButton bookingId={booking.id} userId={booking.user.id} />
+                        <OpenOrderButton bookingId={booking.id} userId={booking.user.id} serviceItemId={booking.service.id} />
                       </div>
                     )}
                   </div>

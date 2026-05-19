@@ -58,7 +58,7 @@ export default async function AgendaPage({ searchParams }: Props) {
         date: { gte: dayStart, lte: dayEnd },
       },
       include: {
-        service: { select: { name: true, durationInMinutes: true, priceInCents: true } },
+        service: { select: { id: true, name: true, durationInMinutes: true, priceInCents: true } },
         user:    { select: { id: true, name: true, email: true, image: true, phone: true } },
       },
       orderBy: { date: "asc" },
