@@ -34,6 +34,14 @@ type ServiceData = {
   durationInMinutes: number
 }
 
+type ReviewData = {
+  id: string
+  rating: number
+  comment: string | null
+  createdAt: string
+  customer: { name: string }
+}
+
 type BarbershopData = {
   name: string
   address: string
@@ -463,6 +471,65 @@ function ReelCard({ src }: { src: string }) {
   )
 }
 
+/* ── Star rating ─────────────────────────────────────────────────────────── */
+
+function Stars({ rating }: { rating: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <svg key={i} className={`size-3 ${i < rating ? "text-[#c9a227]" : "text-white/15"}`} fill="currentColor" viewBox="0 0 20 20">
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+        </svg>
+      ))}
+    </div>
+  )
+}
+
+/* ── Single review card ──────────────────────────────────────────────────── */
+
+function ReviewCard({ review }: { review: ReviewData }) {
+  const firstName = review.customer.name.split(" ")[0]
+  const initial = review.customer.name.charAt(0).toUpperCase()
+  const comment = review.comment?.trim()
+
+  return (
+    <div className="shrink-0 w-[280px] border border-white/[0.07] bg-white/[0.02] p-5 flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <Stars rating={review.rating} />
+        <span className="text-[9px] text-white/20 tabular-nums">
+          {new Date(review.createdAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+        </span>
+      </div>
+      {comment && (
+        <p className="text-sm text-white/60 leading-relaxed line-clamp-3">{comment}</p>
+      )}
+      <div className="flex items-center gap-2 mt-auto pt-1 border-t border-white/[0.05]">
+        <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#c9a227]/15 text-[10px] font-bold text-[#c9a227]">
+          {initial}
+        </div>
+        <span className="text-[11px] font-semibold text-white/50">{firstName}</span>
+      </div>
+    </div>
+  )
+}
+
+/* ── Reviews marquee ─────────────────────────────────────────────────────── */
+
+function ReviewsMarquee({ reviews }: { reviews: ReviewData[] }) {
+  const doubled = [...reviews, ...reviews]
+  return (
+    <div className="relative overflow-hidden">
+      <div className="animate-marquee flex gap-3 w-max px-5">
+        {doubled.map((r, i) => (
+          <ReviewCard key={`${r.id}-${i}`} review={r} />
+        ))}
+      </div>
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#080808] to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-[#080808] to-transparent" />
+    </div>
+  )
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    MAIN COMPONENT
 ══════════════════════════════════════════════════════════════════════════ */
@@ -470,10 +537,12 @@ function ReelCard({ src }: { src: string }) {
 export function LandingPage({
   barbershop,
   services,
+  reviews = [],
   isAdmin = false,
 }: {
   barbershop: BarbershopData
   services: ServiceData[]
+  reviews?: ReviewData[]
   isAdmin?: boolean
 }) {
   /* Parallax hero */
@@ -489,6 +558,12 @@ export function LandingPage({
 
   /* Sorted services */
   const sortedServices = sortServices(services)
+
+  /* Dynamic stats from reviews */
+  const reviewCount = reviews.length
+  const avgRating = reviewCount > 0
+    ? (reviews.reduce((s, r) => s + r.rating, 0) / reviewCount).toFixed(1)
+    : null
 
   return (
     <div className="bg-[#080808] text-white overflow-x-hidden selection:bg-[#c9a227]/25">
@@ -924,8 +999,8 @@ export function LandingPage({
         {/* Stats */}
         <div className="mt-10 grid grid-cols-3 gap-4">
           {[
-            { value: "500+", label: "Clientes atendidos" },
-            { value: "4.9★", label: "Avaliação média" },
+            { value: reviewCount > 0 ? `${reviewCount}+` : "500+", label: "Clientes avaliaram" },
+            { value: avgRating ? `${avgRating}★` : "4.9★", label: "Avaliação média" },
             { value: "5+", label: "Anos de experiência" },
           ].map(({ value, label }, i) => (
             <FadeUp key={label} delay={0.1 * i + 0.28}>
@@ -955,7 +1030,30 @@ export function LandingPage({
 
       <Divider />
 
-      {/* ── SECTION 5 — CTA FINAL ── */}
+      {/* ── SECTION 5 — AVALIAÇÕES ── */}
+      {reviews.length > 0 && (
+        <section className="py-20">
+          <FadeUp className="px-5 mb-10 text-center">
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <div className="h-px w-7 bg-[#c9a227]" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.38em] text-[#c9a227]">Avaliações</span>
+              <div className="h-px w-7 bg-[#c9a227]" />
+            </div>
+            <h2
+              className="font-bebas text-white leading-[0.88] mt-1"
+              style={{ fontSize: "clamp(2.4rem, 7vw, 4rem)" }}
+            >
+              O QUE NOSSOS{" "}
+              <span className="text-[#c9a227]">CLIENTES DIZEM</span>
+            </h2>
+          </FadeUp>
+          <ReviewsMarquee reviews={reviews} />
+        </section>
+      )}
+
+      <Divider />
+
+      {/* ── SECTION 6 — CTA FINAL ── */}
       <section className="relative px-5 py-28 overflow-hidden">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div
