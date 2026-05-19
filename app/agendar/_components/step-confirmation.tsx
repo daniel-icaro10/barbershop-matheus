@@ -53,12 +53,12 @@ export default function StepConfirmation({
     : null
 
   return (
-    <div className="relative flex min-h-dvh flex-col px-5 pb-10 pt-14">
-      {/* Back to home button */}
+    <div className="flex flex-col px-5 pb-10 pt-8">
+      {/* Back to home button — no-flow normal para garantir toque em mobile */}
       <Link
         href="/"
         onClick={reset}
-        className="absolute left-5 top-5 flex size-9 items-center justify-center border border-white/[0.07] bg-white/[0.03] text-white/40 transition-all hover:border-[#c9a227]/30 hover:bg-[#c9a227]/[0.06] hover:text-[#c9a227] active:scale-95"
+        className="mb-6 flex size-9 shrink-0 items-center justify-center self-start border border-white/[0.07] bg-white/[0.03] text-white/40 transition-all hover:border-[#c9a227]/30 hover:bg-[#c9a227]/[0.06] hover:text-[#c9a227] active:scale-95"
         aria-label="Voltar ao início"
       >
         <ArrowLeft className="size-4" />
