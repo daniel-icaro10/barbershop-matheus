@@ -1,10 +1,10 @@
 import { formatInTimeZone } from "date-fns-tz"
-import { CheckCircle2, XCircle, QrCode, Plus, Minus, Tag, Archive, User } from "lucide-react"
+import { CheckCircle2, XCircle, QrCode, Plus, Minus, Tag, Archive, User, Banknote } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const TZ = "America/Sao_Paulo"
 
-type EventType = "ORDER_CREATED" | "ITEM_ADDED" | "ITEM_REMOVED" | "DISCOUNT_APPLIED" | "PIX_GENERATED" | "PIX_APPROVED" | "PIX_CANCELED" | "PAYMENT_REJECTED" | "ORDER_CLOSED" | "ORDER_CANCELED"
+type EventType = "ORDER_CREATED" | "ITEM_ADDED" | "ITEM_REMOVED" | "DISCOUNT_APPLIED" | "PIX_GENERATED" | "PIX_APPROVED" | "PIX_CANCELED" | "PAYMENT_REJECTED" | "CASH_PAYMENT_REGISTERED" | "ORDER_CLOSED" | "ORDER_CANCELED"
 
 interface TimelineEvent {
   id: string
@@ -20,9 +20,10 @@ const eventConfig: Record<EventType, { icon: React.ComponentType<{ className?: s
   ITEM_REMOVED:     { icon: Minus,         color: "text-white/30",    dot: "bg-white/10" },
   DISCOUNT_APPLIED: { icon: Tag,           color: "text-emerald-400", dot: "bg-emerald-400/60" },
   PIX_GENERATED:    { icon: QrCode,        color: "text-amber-400",   dot: "bg-amber-400/60" },
-  PIX_APPROVED:     { icon: CheckCircle2,  color: "text-emerald-400", dot: "bg-emerald-400" },
-  PIX_CANCELED:     { icon: XCircle,       color: "text-red-400",     dot: "bg-red-400/60" },
-  PAYMENT_REJECTED: { icon: XCircle,       color: "text-red-400",     dot: "bg-red-400/60" },
+  PIX_APPROVED:              { icon: CheckCircle2, color: "text-emerald-400", dot: "bg-emerald-400" },
+  PIX_CANCELED:              { icon: XCircle,      color: "text-red-400",     dot: "bg-red-400/60" },
+  PAYMENT_REJECTED:          { icon: XCircle,      color: "text-red-400",     dot: "bg-red-400/60" },
+  CASH_PAYMENT_REGISTERED:   { icon: Banknote,     color: "text-emerald-400", dot: "bg-emerald-400/60" },
   ORDER_CLOSED:     { icon: Archive,       color: "text-[#c9a227]",   dot: "bg-[#c9a227]" },
   ORDER_CANCELED:   { icon: XCircle,       color: "text-red-400",     dot: "bg-red-400/60" },
 }

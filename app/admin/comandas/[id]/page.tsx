@@ -11,6 +11,7 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { AddItemSheet } from "../_components/add-item-sheet"
 import { PaymentSheet } from "../_components/payment-sheet"
+import { CashPaymentSheet } from "../_components/cash-payment-sheet"
 import { CloseOrderButton } from "./_components/close-order-button"
 import { CancelOrderButton } from "./_components/cancel-order-button"
 import { RemoveItemButton } from "./_components/remove-item-button"
@@ -227,7 +228,7 @@ export default async function OrderDetailPage({ params }: Props) {
 
       {/* Actions */}
       {order.status === "OPEN" && (
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <PaymentSheet
             orderId={order.id}
             totalInCents={order.totalInCents}
@@ -245,6 +246,13 @@ export default async function OrderDetailPage({ params }: Props) {
                 : null
             }
           />
+          {pendingInCents > 0 && (
+            <CashPaymentSheet
+              orderId={order.id}
+              totalInCents={order.totalInCents}
+              pendingInCents={pendingInCents}
+            />
+          )}
           <CancelOrderButton orderId={order.id} />
           {pendingInCents === 0 && order.items.length > 0 && (
             <CloseOrderButton orderId={order.id} />

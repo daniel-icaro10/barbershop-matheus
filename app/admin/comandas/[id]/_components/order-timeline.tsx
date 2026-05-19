@@ -1,5 +1,5 @@
 import { formatInTimeZone } from "date-fns-tz"
-import { CheckCircle2, XCircle, QrCode, Plus, Minus, Tag, Archive, ShoppingBag } from "lucide-react"
+import { CheckCircle2, XCircle, QrCode, Plus, Minus, Tag, Archive, ShoppingBag, Banknote } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const TZ = "America/Sao_Paulo"
@@ -19,8 +19,9 @@ const eventConfig: Record<string, { icon: React.ComponentType<{ className?: stri
   ITEM_REMOVED:     { icon: Minus,        color: "text-white/30",    ring: "ring-white/10" },
   DISCOUNT_APPLIED: { icon: Tag,          color: "text-emerald-400", ring: "ring-emerald-400/30" },
   PIX_GENERATED:    { icon: QrCode,       color: "text-amber-400",   ring: "ring-amber-400/30" },
-  PIX_APPROVED:     { icon: CheckCircle2, color: "text-emerald-400", ring: "ring-emerald-400/50" },
-  PIX_CANCELED:     { icon: XCircle,      color: "text-red-400",     ring: "ring-red-400/30" },
+  PIX_APPROVED:              { icon: CheckCircle2, color: "text-emerald-400", ring: "ring-emerald-400/50" },
+  PIX_CANCELED:              { icon: XCircle,      color: "text-red-400",     ring: "ring-red-400/30" },
+  CASH_PAYMENT_REGISTERED:   { icon: Banknote,     color: "text-emerald-400", ring: "ring-emerald-400/30" },
   PAYMENT_REJECTED: { icon: XCircle,      color: "text-red-400",     ring: "ring-red-400/30" },
   ORDER_CLOSED:     { icon: Archive,      color: "text-[#c9a227]",   ring: "ring-[#c9a227]/50" },
   ORDER_CANCELED:   { icon: XCircle,      color: "text-red-400",     ring: "ring-red-400/30" },
