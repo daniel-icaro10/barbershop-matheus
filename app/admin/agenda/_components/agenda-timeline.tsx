@@ -109,13 +109,13 @@ function ReminderButton({ booking }: { booking: BookingEntry }) {
       rel="noreferrer"
       onClick={(e) => e.stopPropagation()}
       title={hasPhone ? `Enviar lembrete para ${firstName}` : "Cliente sem telefone — abrirá WhatsApp sem número"}
-      className={`flex items-center justify-center rounded-md border px-2 py-1 transition-all ${
+      className={`flex items-center justify-center rounded-md border px-2.5 py-1.5 transition-all ${
         hasPhone
           ? "border-green-500/20 bg-green-500/[0.08] text-green-400 hover:border-green-500/40 hover:bg-green-500/15"
           : "border-white/10 bg-white/[0.04] text-white/30 hover:border-white/20 hover:text-white/50"
       }`}
     >
-      <MessageCircle className="size-3" />
+      <MessageCircle className="size-3.5" />
     </a>
   )
 }
