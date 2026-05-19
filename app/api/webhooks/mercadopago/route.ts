@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { processWebhookPayload } from "@/lib/payments/process-webhook"
 import type { Prisma } from "@/generated/prisma/client"
-import { createHmac } from "crypto"
+import { createHmac, timingSafeEqual } from "crypto"
 import { addMinutes } from "date-fns"
 
 // MP signature algorithm uses headers + query param only, not the raw body.
@@ -35,7 +35,8 @@ function validateSignature(req: NextRequest): boolean {
   const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`
   const hmac = createHmac("sha256", secret).update(manifest).digest("hex")
 
-  return hmac === v1
+  if (hmac.length !== v1.length) return false
+  return timingSafeEqual(Buffer.from(hmac), Buffer.from(v1))
 }
 
 export async function POST(req: NextRequest) {
