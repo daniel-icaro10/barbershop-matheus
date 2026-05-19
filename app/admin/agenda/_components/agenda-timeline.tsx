@@ -85,18 +85,14 @@ function OpenOrderButton({ bookingId, userId }: { bookingId: string; userId: str
 }
 
 function ReminderButton({ booking }: { booking: BookingEntry }) {
-  const dateLabel = formatInTimeZone(new Date(booking.date), TZ, "dd/MM/yyyy")
   const timeLabel = formatInTimeZone(new Date(booking.date), TZ, "HH:mm")
   const firstName = booking.user.name.split(" ")[0]
 
   const msg = [
-    `Olá ${firstName}! 👋`,
-    ``,
-    `Lembrando do seu agendamento na *Matheus Barbeiro*:`,
-    `✂️ *${booking.service.name}*`,
-    `📅 ${dateLabel} às ${timeLabel}`,
-    ``,
-    `Te esperamos! 💈`,
+    `Olá, ${firstName} tudo bem?`,
+    `Seu horário hoje às ${timeLabel} está confirmado!`,
+    `${booking.service.name} - ${fmt(booking.service.priceInCents)}`,
+    `ATENÇÃO, não atrasar seu horário, Pois, devido à alta demanda nao consigo atender pra nao atrasar o proximo cliente!`,
   ].join("\n")
 
   const phone = booking.user.phone?.replace(/\D/g, "")
