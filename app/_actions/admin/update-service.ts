@@ -10,7 +10,7 @@ const inputSchema = z.object({
   name: z.string().min(1, "Nome obrigatório").max(100),
   description: z.string().max(500),
   priceInCents: z.number().int().positive("Preço inválido"),
-  durationInMinutes: z.number().int().positive("Duração inválida"),
+  durationInMinutes: z.number().int().min(15, "Duração mínima: 15 minutos"),
   isActive: z.boolean(),
 })
 
