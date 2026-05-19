@@ -2,6 +2,7 @@ import { render } from "@react-email/components"
 import { resend, EMAIL_FROM } from "./resend"
 import { BookingConfirmationEmail } from "./templates/booking-confirmation"
 import { BookingCancellationEmail } from "./templates/booking-cancellation"
+import { BookingReminderEmail } from "./templates/booking-reminder"
 import { formatInTimeZone } from "date-fns-tz"
 import { APP_TIMEZONE } from "@/lib/constants/timezone"
 import { ptBR } from "date-fns/locale"
@@ -67,6 +68,38 @@ export async function sendBookingCancellationEmail({
     from: EMAIL_FROM,
     to,
     subject: `Agendamento cancelado — ${serviceName} · ${formatInTimeZone(bookingDate, APP_TIMEZONE, "dd/MM HH:mm")}`,
+    html,
+  })
+}
+
+export async function sendBookingReminderEmail({
+  to,
+  clientName,
+  serviceName,
+  servicePrice,
+  durationInMinutes,
+  bookingDate,
+}: {
+  to: string
+  clientName: string
+  serviceName: string
+  servicePrice: number
+  durationInMinutes: number
+  bookingDate: Date
+}) {
+  const dateLabel = formatInTimeZone(bookingDate, APP_TIMEZONE, "EEEE, dd 'de' MMMM", { locale: ptBR })
+  const timeLabel = formatInTimeZone(bookingDate, APP_TIMEZONE, "HH:mm")
+  const calendarUrl = buildCalendarUrl(bookingDate, serviceName, durationInMinutes)
+  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Olá! Tenho um agendamento amanhã. 📅")}`
+
+  const html = await render(
+    BookingReminderEmail({ clientName, serviceName, servicePrice, dateLabel, timeLabel, calendarUrl, whatsappUrl })
+  )
+
+  await resend.emails.send({
+    from: EMAIL_FROM,
+    to,
+    subject: `Lembrete: seu horário é amanhã às ${timeLabel} — ${serviceName}`,
     html,
   })
 }
