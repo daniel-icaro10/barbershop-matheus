@@ -6,7 +6,7 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { fromZonedTime } from "date-fns-tz"
 import { APP_TIMEZONE } from "@/lib/constants/timezone"
-import { CalendarPlus, RotateCcw, ArrowLeft, QrCode, MapPin, Navigation, Map } from "lucide-react"
+import { CalendarPlus, RotateCcw, ArrowLeft, QrCode, MapPin, Navigation, Map, MessageCircle } from "lucide-react"
 import Link from "next/link"
 
 const formatPrice = (cents: number) =>
@@ -32,16 +32,16 @@ export default function StepConfirmation({
 
   const calendarUrl = () => {
     if (!date || !time || !service) return "#"
-    const [h, m] = time.split(":").map(Number)
-    const start = fromZonedTime(
-      new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), h, m, 0, 0)),
-      APP_TIMEZONE,
-    )
-    const end = new Date(start)
-    end.setMinutes(end.getMinutes() + (service.durationInMinutes ?? 30))
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, "0")
+    const day = String(date.getDate()).padStart(2, "0")
+    const start = fromZonedTime(`${year}-${month}-${day}T${time}:00`, APP_TIMEZONE)
+    const end = new Date(start.getTime() + (service.durationInMinutes ?? 30) * 60_000)
     const fmt = (d: Date) => d.toISOString().replace(/[-:]|\.\d{3}/g, "")
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(service.name + " · Matheus Barbeiro")}&dates=${fmt(start)}/${fmt(end)}`
   }
+
+  const whatsappUrl = `https://wa.me/5581989759980?text=${encodeURIComponent("Olá! Acabei de fazer meu agendamento pelo site. 📅")}`
 
   const mapsUrl = location?.googleMapsUrl
     ?? (location?.latitude && location?.longitude
@@ -170,6 +170,19 @@ export default function StepConfirmation({
             >
               <CalendarPlus className="size-4" />
               Calendário
+            </a>
+          </motion.div>
+
+          {/* WhatsApp */}
+          <motion.div variants={fadeUp} transition={{ duration: 0.4 }} className="w-full">
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="flex w-full items-center justify-center gap-2.5 border border-green-500/20 bg-green-500/[0.06] py-3.5 text-sm font-semibold text-green-400 transition-all duration-200 hover:border-green-500/40 hover:bg-green-500/10"
+            >
+              <MessageCircle className="size-4" />
+              Falar no WhatsApp
             </a>
           </motion.div>
 
