@@ -10,7 +10,7 @@ import { Loader2, ClipboardList, MessageCircle } from "lucide-react"
 import { createOrder } from "@/app/_actions/admin/orders/create-order"
 
 const TZ = APP_TIMEZONE
-const SLOT_HEIGHT = 32
+const SLOT_HEIGHT = 48
 
 const fmt = (cents: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100)
