@@ -13,6 +13,7 @@ import { toZonedTime, formatInTimeZone } from "date-fns-tz"
 import { APP_TIMEZONE } from "@/lib/constants/timezone"
 import { rateLimitBooking } from "@/lib/rate-limit"
 import { sendPushToUser, sendPushToAdmins } from "@/lib/push"
+import { sendBookingConfirmationEmail } from "@/lib/email/send-booking-emails"
 import { z } from "zod"
 
 const inputSchema = z.object({
@@ -98,6 +99,7 @@ export const createBooking = actionClient
       const serviceSnapshot = service
       const userId = session.user.id
       const clientName = session.user.name ?? "Cliente"
+      const clientEmail = session.user.email ?? ""
       after(async () => {
         const dateStr = formatInTimeZone(bookingSnapshot.date, APP_TIMEZONE, "dd/MM/yyyy 'às' HH:mm")
         await Promise.allSettled([
@@ -111,6 +113,16 @@ export const createBooking = actionClient
             body: `${serviceSnapshot.name} — ${dateStr}`,
             url: "/admin/agenda",
           }),
+          clientEmail
+            ? sendBookingConfirmationEmail({
+                to: clientEmail,
+                clientName,
+                serviceName: serviceSnapshot.name,
+                servicePrice: serviceSnapshot.priceInCents,
+                durationInMinutes: serviceSnapshot.durationInMinutes,
+                bookingDate: bookingSnapshot.date,
+              })
+            : Promise.resolve(),
         ])
       })
 
