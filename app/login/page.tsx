@@ -7,27 +7,29 @@ import { ArrowLeft, Loader2 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0 },
-}
-
 export default function LoginPage() {
-  const [mode, setMode] = useState<"login" | "signup">("login")
+  const [mode, setMode] = useState<"login" | "signup" | "forgot">("login")
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
   const [pending, startTransition] = useTransition()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setSuccess("")
     startTransition(async () => {
+      if (mode === "forgot") {
+        const { error } = await authClient.requestPasswordReset({ email, redirectTo: "/redefinir-senha" })
+        if (error) { setError("Não foi possível enviar o email."); return }
+        setSuccess("Link enviado! Verifique seu email.")
+        return
+      }
       if (mode === "signup") {
         const { error } = await authClient.signUp.email({ name, email, password })
         if (error) { setError(error.message ?? "Erro ao criar conta."); return }
-        // signUp already creates a session — hard redirect so server components pick it up
         window.location.href = "/"
       } else {
         const { error } = await authClient.signIn.email({ email, password })
@@ -37,9 +39,10 @@ export default function LoginPage() {
     })
   }
 
-  const switchMode = (next: "login" | "signup") => {
+  const switchMode = (next: "login" | "signup" | "forgot") => {
     setMode(next)
     setError("")
+    setSuccess("")
     setName("")
   }
 
@@ -93,7 +96,7 @@ export default function LoginPage() {
                 transition={{ duration: 0.2 }}
                 className="mt-1 text-sm text-muted-foreground"
               >
-                {mode === "login" ? "Entre na sua conta" : "Crie sua conta"}
+                {mode === "login" ? "Entre na sua conta" : mode === "signup" ? "Crie sua conta" : "Recuperar senha"}
               </motion.p>
             </AnimatePresence>
           </div>
@@ -138,15 +141,41 @@ export default function LoginPage() {
               required
               className={inputBase}
             />
-            <input
-              type="password"
-              placeholder="Senha"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-              className={inputBase}
-            />
+
+            <AnimatePresence initial={false}>
+              {mode !== "forgot" && (
+                <motion.div
+                  key="password-field"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.22 }}
+                  className="overflow-hidden"
+                >
+                  <input
+                    type="password"
+                    placeholder="Senha"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={8}
+                    className={inputBase}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {mode === "login" && (
+              <div className="flex justify-end -mt-1">
+                <button
+                  type="button"
+                  onClick={() => switchMode("forgot")}
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Esqueci minha senha
+                </button>
+              </div>
+            )}
 
             <AnimatePresence>
               {error && (
@@ -161,6 +190,18 @@ export default function LoginPage() {
                   {error}
                 </motion.p>
               )}
+              {success && (
+                <motion.p
+                  key="success"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.18 }}
+                  className="overflow-hidden rounded-xl bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-400"
+                >
+                  {success}
+                </motion.p>
+              )}
             </AnimatePresence>
 
             <motion.button
@@ -172,10 +213,10 @@ export default function LoginPage() {
               {pending ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  {mode === "login" ? "Entrando..." : "Criando conta..."}
+                  {mode === "forgot" ? "Enviando..." : mode === "login" ? "Entrando..." : "Criando conta..."}
                 </>
               ) : (
-                mode === "login" ? "Entrar" : "Criar conta"
+                mode === "forgot" ? "Enviar link" : mode === "login" ? "Entrar" : "Criar conta"
               )}
             </motion.button>
           </form>
@@ -199,21 +240,22 @@ export default function LoginPage() {
               {mode === "login" ? (
                 <>
                   Não tem conta?{" "}
-                  <button
-                    onClick={() => switchMode("signup")}
-                    className="font-semibold text-primary hover:underline"
-                  >
+                  <button onClick={() => switchMode("signup")} className="font-semibold text-primary hover:underline">
                     Criar conta
+                  </button>
+                </>
+              ) : mode === "signup" ? (
+                <>
+                  Já tem conta?{" "}
+                  <button onClick={() => switchMode("login")} className="font-semibold text-primary hover:underline">
+                    Entrar
                   </button>
                 </>
               ) : (
                 <>
-                  Já tem conta?{" "}
-                  <button
-                    onClick={() => switchMode("login")}
-                    className="font-semibold text-primary hover:underline"
-                  >
-                    Entrar
+                  Lembrou a senha?{" "}
+                  <button onClick={() => switchMode("login")} className="font-semibold text-primary hover:underline">
+                    Voltar ao login
                   </button>
                 </>
               )}
